@@ -1,5 +1,3 @@
-use std::mem;
-
 use futures::{Async, Future, IntoFuture, Poll};
 use super::test_result::TestResult;
 use super::test_spawner::TestSpawner;
@@ -74,10 +72,7 @@ where
         }
 
         if self.tests.is_empty() && self.test_executions.is_empty() {
-            let test_results =
-                mem::replace(&mut self.test_results, Vec::new());
-
-            Ok(Async::Ready(test_results))
+            Ok(Async::Ready(self.test_results.drain(..).collect()))
         } else {
             Ok(Async::NotReady)
         }
