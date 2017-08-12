@@ -60,12 +60,15 @@ where
                 self.test_executions.push(test.into_future());
             }
 
-            let test_poll_results: Vec<Poll<_, _>> = self.test_executions
+            let test_executions_count = self.test_executions.len();
+            let poll_results = self.test_executions
                 .iter_mut()
                 .map(|execution| execution.poll())
-                .collect();
+                .zip(0..test_executions_count)
+                .rev()
+                .collect::<Vec<_>>();
 
-            for (poll_result, index) in test_poll_results.into_iter().zip(0..) {
+            for (poll_result, index) in poll_results {
                 match poll_result {
                     Ok(Async::Ready(result)) => {
                         self.test_results.push(result);
