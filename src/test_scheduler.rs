@@ -8,7 +8,7 @@ where
     S: TestSpawner,
 {
     spawner: S,
-    tests: Vec<Box<FnMut(&mut S::TestSetup)>>,
+    test_queue: Vec<Box<FnMut(&mut S::TestSetup)>>,
     test_executions: Vec<<S::TestSetup as IntoTest>::Test>,
     test_results:
         Vec<TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>>,
@@ -21,7 +21,7 @@ where
     pub fn new(spawner: S) -> Self {
         Self {
             spawner,
-            tests: Vec::new(),
+            test_queue: Vec::new(),
             test_executions: Vec::new(),
             test_results: Vec::new(),
         }
@@ -31,11 +31,11 @@ where
     where
         F: FnMut(&mut S::TestSetup) + 'static,
     {
-        self.tests.push(Box::new(test_setup));
+        self.test_queue.push(Box::new(test_setup));
     }
 
-    fn start_tests(&mut self) {
-        for mut test_setup_function in self.tests.drain(0..) {
+    fn start_queued_tests(&mut self) {
+        for mut test_setup_function in self.test_queue.drain(0..) {
             let mut test_setup = self.spawner.spawn();
 
             test_setup_function(&mut test_setup);
@@ -65,7 +65,7 @@ where
     }
 
     fn all_tests_finished(&self) -> bool {
-        self.tests.is_empty() && self.test_executions.is_empty()
+        self.test_queue.is_empty() && self.test_executions.is_empty()
     }
 }
 
@@ -78,7 +78,7 @@ where
     type Error = ();
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        self.start_tests();
+        self.start_queued_tests();
         self.poll_tests();
 
         if self.all_tests_finished() {
