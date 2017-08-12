@@ -8,7 +8,7 @@ bytes = "0.4"
 futures = "0.1"
 tokio-io = "0.1"
 tokio-core = "0.1"
-tokio-proto = {path = "./tokio-proto"}
+tokio-proto = { git = "https://github.com/jvff/tokio-proto", branch = "generic_error" }
 tokio-process = "0.1"
 tokio-service = "0.1"
 error-chain = "0.10"

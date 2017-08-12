@@ -1,3 +1,0 @@
-[submodule "tokio-proto"]
-	path = tokio-proto
-	url = ../../jvff/tokio-proto
