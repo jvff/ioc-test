@@ -1,26 +1,13 @@
 use std::ops::Range;
 
-use tokio_core::net::TcpStream;
 use tokio_core::reactor::Handle;
-use tokio_proto::pipeline::ServerProto;
 
+use super::protocol::Protocol;
 use super::super::ioc_test::IocTestSetup;
-use super::super::scpi;
 use super::super::scpi::ScpiProtocol;
 use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
 use super::super::test_spawner::TestSpawner;
-
-pub trait Protocol
-    : ServerProto<
-    TcpStream,
-    Request = ScpiRequest,
-    Response = ScpiResponse,
-    Error = scpi::Error,
-> {
-}
-
-impl Protocol for ScpiProtocol {}
 
 pub struct IocTestSpawner {
     handle: Handle,
