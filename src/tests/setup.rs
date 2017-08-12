@@ -66,16 +66,6 @@ impl TestSpawner for IocTestSpawner {
     }
 }
 
-pub fn run_tests() -> Result<(), Error> {
-    let mut reactor = Core::new()?;
-    let spawner = IocTestSpawner::new(reactor.handle());
-    let mut tests = TestScheduler::new(spawner);
-
-    super::add_tests(&mut tests);
-
-    Ok(reactor.run(TestReporter::new(tests)).unwrap())
-}
-
 fn configure_initial_test_messages<P: Protocol>(test: &mut IocTestSetup<P>) {
     request_response_map! { test,
         ScpiRequest::OutputStatus(1) => ScpiResponse::Integer(0),
