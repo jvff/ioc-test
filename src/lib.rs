@@ -30,3 +30,7 @@ pub mod test_spawner;
 pub mod test;
 
 pub mod tests;
+
+pub use self::tests::IocTestSpawner;
+pub use self::test_reporter::TestReporter;
+pub use self::test_scheduler::TestScheduler;
