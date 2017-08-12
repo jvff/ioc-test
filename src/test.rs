@@ -1,7 +1,9 @@
+use std::fmt::Display;
+
 use futures::{Async, Poll};
 
 pub trait Test {
-    type Error;
+    type Error: Display;
 
     fn name(&self) -> &str;
     fn poll_test(&mut self) -> Poll<(), Self::Error>;

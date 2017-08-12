@@ -4,12 +4,12 @@ use tokio_core::net::TcpStream;
 use tokio_core::reactor::{Core, Handle};
 use tokio_proto::pipeline::ServerProto;
 
-use super::super::ioc_test::{Error, IocTestSetup, Result};
+use super::super::ioc_test::{Error, IocTestSetup};
 use super::super::scpi;
 use super::super::scpi::ScpiProtocol;
 use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
-use super::super::test_result::TestResult;
+use super::super::test_reporter::TestReporter;
 use super::super::test_scheduler::TestScheduler;
 use super::super::test_spawner::TestSpawner;
 
@@ -66,14 +66,14 @@ impl TestSpawner for IocTestSpawner {
     }
 }
 
-pub fn run_tests() -> Result<Vec<TestResult<Error>>> {
+pub fn run_tests() -> Result<(), Error> {
     let mut reactor = Core::new()?;
     let spawner = IocTestSpawner::new(reactor.handle());
     let mut tests = TestScheduler::new(spawner);
 
     super::add_tests(&mut tests);
 
-    Ok(reactor.run(tests).unwrap())
+    Ok(reactor.run(TestReporter::new(tests)).unwrap())
 }
 
 fn configure_initial_test_messages<P: Protocol>(test: &mut IocTestSetup<P>) {

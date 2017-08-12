@@ -10,6 +10,8 @@ extern crate tokio_service;
 #[macro_use]
 extern crate error_chain;
 
+extern crate termion;
+
 pub mod scpi;
 
 pub mod line_codec;
@@ -21,6 +23,7 @@ pub mod mock_server;
 pub mod ioc;
 pub mod ioc_test;
 
+pub mod test_reporter;
 pub mod test_result;
 pub mod test_scheduler;
 pub mod test_spawner;
