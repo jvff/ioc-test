@@ -1,4 +1,4 @@
-use futures::{Async, Future, Poll};
+use futures::{Async, Future, Poll, Stream};
 use termion::color::{Fg, Green, Red, Yellow};
 use termion::style::{Bold, Reset};
 
@@ -11,6 +11,8 @@ pub struct TestReporter<S>
 where
     S: TestSpawner,
 {
+    successful_tests: usize,
+    failed_tests: usize,
     scheduler: TestScheduler<S>,
 }
 
@@ -19,70 +21,69 @@ where
     S: TestSpawner,
 {
     pub fn new(scheduler: TestScheduler<S>) -> Self {
-        TestReporter { scheduler }
+        TestReporter {
+            successful_tests: 0,
+            failed_tests: 0,
+            scheduler,
+        }
     }
 
     fn report(
-        &self,
-        test_results: Vec<
-            TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>
-        >,
-) -> Poll<(), ()>{
-        let mut successful_tests = 0;
-        let mut failed_tests = 0;
+        &mut self,
+        result: TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>,
+){
+        match result {
+            Ok(_) => self.successful_tests += 1,
+            Err((ref test, ref error)) => {
+                println!(
+                    "{bold}{red}Fail: {reset}{yellow}{name}{reset}: {message}",
+                    bold = Bold,
+                    name = test,
+                    message = error,
+                    red = Fg(Red),
+                    yellow = Fg(Yellow),
+                    reset = Reset,
+                );
 
-        for test_result in test_results {
-            match test_result {
-                Ok(_) => successful_tests += 1,
-                Err((ref test, ref error)) => {
-                    println!(
-                        "{bold}{red}Fail: {reset}{yellow}{name}{reset}: \
-                         {message}",
-                        bold = Bold,
-                        name = test,
-                        message = error,
-                        red = Fg(Red),
-                        yellow = Fg(Yellow),
-                        reset = Reset,
-                    );
-                    failed_tests += 1;
-                }
+                self.failed_tests += 1;
             }
         }
+    }
 
-        if failed_tests > 0 {
+    fn report_summary(&self) -> Poll<(), ()> {
+        if self.failed_tests > 0 {
             println!("");
         }
 
-        if successful_tests == 1 {
+        if self.successful_tests == 1 {
             println!(
                 "{bold}1 test {green}succeeded{reset}",
                 bold = Bold,
                 green = Fg(Green),
                 reset = Reset
             );
-        } else if successful_tests > 1 {
+        } else if self.successful_tests > 1 {
             println!(
                 "{bold}{count} tests {green}succeeded{reset}",
                 bold = Bold,
-                count = successful_tests,
+                count = self.successful_tests,
                 green = Fg(Green),
                 reset = Reset
             );
         }
 
-        if failed_tests == 1 {
+        if self.failed_tests == 1 {
             println!(
                 "{bold}1 test {red}failed{reset}",
                 bold = Bold,
                 red = Fg(Red),
                 reset = Reset
             );
-        } else if failed_tests > 1 {
+        } else if self.failed_tests > 1 {
             println!(
                 "{bold}{count} tests {red}failed{reset}",
                 bold = Bold,
-                count = failed_tests,
+                count = self.failed_tests,
                 red = Fg(Red),
                 reset = Reset
             );
@@ -100,8 +101,21 @@ where
     type Error = ();
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        let mut poll_result = self.scheduler.poll();
+
+        while let Ok(Async::Ready(Some(result))) = poll_result {
+            self.report(result);
+
+            poll_result = self.scheduler.poll();
+        }
+
         match self.scheduler.poll() {
-            Ok(Async::Ready(results)) => self.report(results),
+            Ok(Async::Ready(Some(_))) => {
+                unreachable!(
+                    "All available test results should have been reported"
+                );
+            }
+            Ok(Async::Ready(None)) => self.report_summary(),
             Ok(Async::NotReady) => Ok(Async::NotReady),
             Err(()) => Err(()),
         }

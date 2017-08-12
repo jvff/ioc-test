@@ -1,4 +1,4 @@
-use futures::{Async, Future, Poll};
+use futures::{Async, Poll, Stream};
 use super::test::{IntoTest, Test};
 use super::test_result::{TestResult, TestResultMethods};
 use super::test_spawner::TestSpawner;
@@ -10,8 +10,6 @@ where
     spawner: S,
     test_queue: Vec<Box<FnMut(&mut S::TestSetup)>>,
     test_executions: Vec<<S::TestSetup as IntoTest>::Test>,
-    test_results:
-        Vec<TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>>,
 }
 
 impl<S> TestScheduler<S>
@@ -23,7 +21,6 @@ where
             spawner,
             test_queue: Vec::new(),
             test_executions: Vec::new(),
-            test_results: Vec::new(),
         }
     }
 
@@ -44,22 +41,25 @@ where
         }
     }
 
-    fn poll_tests(&mut self) {
-        let test_executions_count = self.test_executions.len();
-        let poll_results = self.test_executions
+    fn next_test_result(&mut self) -> Poll<Option<<Self as Stream>::Item>, ()> {
+        let next_ready_result = self.test_executions
             .iter_mut()
-            .map(|execution| execution.poll())
-            .zip(0..test_executions_count)
-            .rev()
-            .collect::<Vec<_>>();
+            .zip(0..)
+            .filter_map(|(execution, index)| match execution.poll() {
+                Ok(Async::NotReady) => None,
+                poll_result => Some((poll_result, index)),
+            })
+            .next();
 
-        for (poll_result, index) in poll_results {
-            match poll_result {
-                Ok(Async::NotReady) => {}
-                poll_result => {
-                    self.test_results.push(TestResult::from_poll(poll_result));
-                    self.test_executions.remove(index);
-                }
+        if let Some((poll_result, index)) = next_ready_result {
+            self.test_executions.remove(index);
+
+            Ok(Async::Ready(Some(TestResult::from_poll(poll_result))))
+        } else {
+            if self.all_tests_finished() {
+                Ok(Async::Ready(None))
+            } else {
+                Ok(Async::NotReady)
             }
         }
     }
@@ -69,22 +69,16 @@ where
     }
 }
 
-impl<S> Future for TestScheduler<S>
+impl<S> Stream for TestScheduler<S>
 where
     S: TestSpawner,
 {
-    type Item =
-        Vec<TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>>;
+    type Item = TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>;
     type Error = ();
 
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         self.start_queued_tests();
-        self.poll_tests();
 
-        if self.all_tests_finished() {
-            Ok(Async::Ready(self.test_results.drain(..).collect()))
-        } else {
-            Ok(Async::NotReady)
-        }
+        self.next_test_result()
     }
 }
