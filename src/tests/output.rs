@@ -3,6 +3,7 @@ use super::super::ioc_test::{Error, IocTestSetup};
 use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
 use super::super::test_scheduler::TestScheduler;
+use super::super::test_spawner::TestSpawner;
 
 tests! {
     test("enable channel output") {

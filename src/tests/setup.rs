@@ -1,5 +1,7 @@
+use std::ops::Range;
+
 use tokio_core::net::TcpStream;
-use tokio_core::reactor::Core;
+use tokio_core::reactor::{Core, Handle};
 use tokio_proto::pipeline::ServerProto;
 
 use super::super::ioc_test::{Error, IocTestSetup, Result};
@@ -9,6 +11,7 @@ use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
 use super::super::test_result::TestResult;
 use super::super::test_scheduler::TestScheduler;
+use super::super::test_spawner::TestSpawner;
 
 pub trait Protocol
     : ServerProto<
@@ -27,7 +30,7 @@ macro_rules! tests {
             scheduler: &mut TestScheduler<S, IocTestSetup<P>, Error>
         )
         where
-            S: FnMut() -> IocTestSetup<P>,
+            S: TestSpawner<Test = IocTestSetup<P>>,
             P: Protocol,
         {
             $(scheduler.add(|mut $test| {
@@ -38,21 +41,40 @@ macro_rules! tests {
     }
 }
 
-pub fn run_tests() -> Result<Vec<TestResult<Error>>> {
-    let mut reactor = Core::new()?;
-    let handle = reactor.handle();
-    let mut ports = 55000..56000;
-    let mut tests = TestScheduler::new();
+pub struct IocTestSpawner {
+    handle: Handle,
+    ports: Range<u16>,
+}
 
-    tests.spawn(|| {
-        let port = ports.next().unwrap();
-        let test = IocTestSetup::new(handle.clone(), ScpiProtocol, port);
+impl IocTestSpawner {
+    pub fn new(handle: Handle) -> Self {
+        let ports = 55000..56000;
+
+        Self {
+            handle,
+            ports,
+        }
+    }
+}
+
+impl TestSpawner for IocTestSpawner {
+    type Test = IocTestSetup<ScpiProtocol>;
+
+    fn spawn(&mut self) -> Self::Test {
+        let port = self.ports.next().unwrap();
+        let test = IocTestSetup::new(self.handle.clone(), ScpiProtocol, port);
         let mut test = test.unwrap();
 
         configure_initial_test_messages(&mut test);
 
         test
-    });
+    }
+}
+
+pub fn run_tests() -> Result<Vec<TestResult<Error>>> {
+    let mut reactor = Core::new()?;
+    let spawner = IocTestSpawner::new(reactor.handle());
+    let mut tests = TestScheduler::new(spawner);
 
     super::add_tests(&mut tests);
 
