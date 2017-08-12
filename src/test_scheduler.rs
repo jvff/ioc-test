@@ -33,17 +33,8 @@ where
     {
         self.tests.push(Box::new(test_setup));
     }
-}
 
-impl<S> Future for TestScheduler<S>
-where
-    S: TestSpawner,
-{
-    type Item =
-        Vec<TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>>;
-    type Error = ();
-
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+    fn start_tests(&mut self) {
         for mut test_setup_function in self.tests.drain(0..) {
             let mut test_setup = self.spawner.spawn();
 
@@ -51,7 +42,9 @@ where
 
             self.test_executions.push(test_setup.into_test());
         }
+    }
 
+    fn poll_tests(&mut self) {
         let test_executions_count = self.test_executions.len();
         let poll_results = self.test_executions
             .iter_mut()
@@ -69,8 +62,26 @@ where
                 }
             }
         }
+    }
 
-        if self.tests.is_empty() && self.test_executions.is_empty() {
+    fn all_tests_finished(&self) -> bool {
+        self.tests.is_empty() && self.test_executions.is_empty()
+    }
+}
+
+impl<S> Future for TestScheduler<S>
+where
+    S: TestSpawner,
+{
+    type Item =
+        Vec<TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>>;
+    type Error = ();
+
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        self.start_tests();
+        self.poll_tests();
+
+        if self.all_tests_finished() {
             Ok(Async::Ready(self.test_results.drain(..).collect()))
         } else {
             Ok(Async::NotReady)
