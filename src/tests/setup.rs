@@ -26,11 +26,9 @@ impl Protocol for ScpiProtocol {}
 
 macro_rules! tests {
     ( $( $test:ident ($name:expr) $body:tt )* ) => {
-        pub fn add_tests<S, P>(
-            scheduler: &mut TestScheduler<S, IocTestSetup<P>, Error>
-        )
+        pub fn add_tests<S, P>(scheduler: &mut TestScheduler<S>)
         where
-            S: TestSpawner<Test = IocTestSetup<P>>,
+            S: TestSpawner<TestSetup = IocTestSetup<P>>,
             P: Protocol,
         {
             $(scheduler.add(|mut $test| {
@@ -50,17 +48,14 @@ impl IocTestSpawner {
     pub fn new(handle: Handle) -> Self {
         let ports = 55000..56000;
 
-        Self {
-            handle,
-            ports,
-        }
+        Self { handle, ports }
     }
 }
 
 impl TestSpawner for IocTestSpawner {
-    type Test = IocTestSetup<ScpiProtocol>;
+    type TestSetup = IocTestSetup<ScpiProtocol>;
 
-    fn spawn(&mut self) -> Self::Test {
+    fn spawn(&mut self) -> Self::TestSetup {
         let port = self.ports.next().unwrap();
         let test = IocTestSetup::new(self.handle.clone(), ScpiProtocol, port);
         let mut test = test.unwrap();
@@ -114,4 +109,3 @@ fn configure_initial_test_messages<P: Protocol>(test: &mut IocTestSetup<P>) {
             ScpiResponse::Integer(1),
     };
 }
-

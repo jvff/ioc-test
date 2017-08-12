@@ -1,7 +1,7 @@
-use futures::IntoFuture;
+use super::test::IntoTest;
 
 pub trait TestSpawner {
-    type Test: IntoFuture;
+    type TestSetup: IntoTest;
 
-    fn spawn(&mut self) -> Self::Test;
+    fn spawn(&mut self) -> Self::TestSetup;
 }

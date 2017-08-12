@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::hash::Hash;
 
-use futures::{Async, Future, Poll};
+use futures::{Future, Poll};
 use futures::future::Flatten;
 use tokio_core::net::TcpStream;
 use tokio_proto::pipeline::ServerProto;
@@ -11,7 +11,7 @@ use super::ioc_test_start::IocTestStart;
 use super::super::ioc::IocSpawn;
 use super::super::mock_server;
 use super::super::mock_server::MockServerStart;
-use super::super::test_result::{TestResult, TestResultMethods};
+use super::super::test::Test;
 
 pub struct IocTest<P>
 where
@@ -46,25 +46,20 @@ where
     }
 }
 
-impl<P> Future for IocTest<P>
+impl<P> Test for IocTest<P>
 where
     P: ServerProto<TcpStream>,
     <P as ServerProto<TcpStream>>::Request: Clone + Display + Eq + Hash,
     <P as ServerProto<TcpStream>>::Response: Clone,
     <P as ServerProto<TcpStream>>::Error: Into<mock_server::Error>,
 {
-    type Item = TestResult<Error>;
-    type Error = ();
+    type Error = Error;
 
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        match self.future.poll() {
-            Ok(Async::NotReady) => Ok(Async::NotReady),
-            Ok(Async::Ready(())) => {
-                Ok(Async::Ready(TestResult::success(self.name.clone())))
-            }
-            Err(error) => {
-                Ok(Async::Ready(TestResult::failure(self.name.clone(), error)))
-            }
-        }
+    fn name(&self) -> &str {
+        self.name.as_str()
+    }
+
+    fn poll_test(&mut self) -> Poll<(), Self::Error> {
+        self.future.poll()
     }
 }

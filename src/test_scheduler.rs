@@ -1,22 +1,22 @@
-use futures::{Async, Future, IntoFuture, Poll};
-use super::test_result::TestResult;
+use futures::{Async, Future, Poll};
+use super::test::{IntoTest, Test};
+use super::test_result::{TestResult, TestResultMethods};
 use super::test_spawner::TestSpawner;
 
-pub struct TestScheduler<S, T, E>
+pub struct TestScheduler<S>
 where
-    S: TestSpawner<Test = T>,
-    T: IntoFuture<Item = TestResult<E>, Error = ()>,
+    S: TestSpawner,
 {
     spawner: S,
-    tests: Vec<Box<FnMut(&mut T)>>,
-    test_executions: Vec<T::Future>,
-    test_results: Vec<TestResult<E>>,
+    tests: Vec<Box<FnMut(&mut S::TestSetup)>>,
+    test_executions: Vec<<S::TestSetup as IntoTest>::Test>,
+    test_results:
+        Vec<TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>>,
 }
 
-impl<S, T, E> TestScheduler<S, T, E>
+impl<S> TestScheduler<S>
 where
-    S: TestSpawner<Test = T>,
-    T: IntoFuture<Item = TestResult<E>, Error = ()>,
+    S: TestSpawner,
 {
     pub fn new(spawner: S) -> Self {
         Self {
@@ -29,27 +29,27 @@ where
 
     pub fn add<F>(&mut self, test_setup: F)
     where
-        F: FnMut(&mut T) + 'static,
+        F: FnMut(&mut S::TestSetup) + 'static,
     {
         self.tests.push(Box::new(test_setup));
     }
 }
 
-impl<S, T, E> Future for TestScheduler<S, T, E>
+impl<S> Future for TestScheduler<S>
 where
-    S: TestSpawner<Test = T>,
-    T: IntoFuture<Item = TestResult<E>, Error = ()>,
+    S: TestSpawner,
 {
-    type Item = Vec<TestResult<E>>;
+    type Item =
+        Vec<TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>>;
     type Error = ();
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         for mut test_setup_function in self.tests.drain(0..) {
-            let mut test = self.spawner.spawn();
+            let mut test_setup = self.spawner.spawn();
 
-            test_setup_function(&mut test);
+            test_setup_function(&mut test_setup);
 
-            self.test_executions.push(test.into_future());
+            self.test_executions.push(test_setup.into_test());
         }
 
         let test_executions_count = self.test_executions.len();
@@ -62,12 +62,11 @@ where
 
         for (poll_result, index) in poll_results {
             match poll_result {
-                Ok(Async::Ready(result)) => {
-                    self.test_results.push(result);
+                Ok(Async::NotReady) => {}
+                poll_result => {
+                    self.test_results.push(TestResult::from_poll(poll_result));
                     self.test_executions.remove(index);
                 }
-                Ok(Async::NotReady) => {}
-                Err(_) => panic!("Fatal test execution failure"),
             }
         }
 

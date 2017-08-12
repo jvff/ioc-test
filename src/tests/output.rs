@@ -1,5 +1,5 @@
 use super::setup::Protocol;
-use super::super::ioc_test::{Error, IocTestSetup};
+use super::super::ioc_test::IocTestSetup;
 use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
 use super::super::test_scheduler::TestScheduler;

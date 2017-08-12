@@ -2,18 +2,17 @@ use std::fmt::Display;
 use std::hash::Hash;
 use std::net::SocketAddr;
 
-use futures::IntoFuture;
 use tokio_core::net::TcpStream;
 use tokio_core::reactor::Handle;
 use tokio_proto::pipeline::ServerProto;
 
-use super::errors::{Error, Result};
+use super::errors::Result;
 use super::ioc_test::IocTest;
 use super::super::ioc::IocSpawn;
 use super::super::mock_server;
 use super::super::mock_server::MockServer;
 use super::super::mock_service::When;
-use super::super::test_result::TestResult;
+use super::super::test::IntoTest;
 
 pub struct IocTestSetup<P>
 where
@@ -72,18 +71,16 @@ where
     }
 }
 
-impl<P> IntoFuture for IocTestSetup<P>
+impl<P> IntoTest for IocTestSetup<P>
 where
     P: ServerProto<TcpStream>,
     <P as ServerProto<TcpStream>>::Request: Clone + Display + Eq + Hash,
     <P as ServerProto<TcpStream>>::Response: Clone,
     <P as ServerProto<TcpStream>>::Error: Into<mock_server::Error>,
 {
-    type Future = IocTest<P>;
-    type Item = TestResult<Error>;
-    type Error = ();
+    type Test = IocTest<P>;
 
-    fn into_future(self) -> Self::Future {
+    fn into_test(self) -> Self::Test {
         let ioc = IocSpawn::new(self.handle.clone(), self.ip_port);
         let server = self.server.start(self.handle);
 
