@@ -13,14 +13,14 @@ fn main() {
             let mut failed_tests = 0;
 
             for test_result in test_results {
-                match *test_result.result() {
+                match test_result {
                     Ok(_) => successful_tests += 1,
-                    Err(ref error) => {
+                    Err((ref test, ref error)) => {
                         println!(
                             "{bold}{red}Fail: {reset}{yellow}{name}{reset}: \
                              {message}",
                             bold = Bold,
-                            name = test_result.name(),
+                            name = test,
                             message = error,
                             red = Fg(Red),
                             yellow = Fg(Yellow),

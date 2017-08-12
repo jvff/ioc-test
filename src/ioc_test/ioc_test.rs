@@ -11,7 +11,7 @@ use super::ioc_test_start::IocTestStart;
 use super::super::ioc::IocSpawn;
 use super::super::mock_server;
 use super::super::mock_server::MockServerStart;
-use super::super::test_result::TestResult;
+use super::super::test_result::{TestResult, TestResultMethods};
 
 pub struct IocTest<P>
 where

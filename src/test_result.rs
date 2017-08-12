@@ -1,28 +1,27 @@
-pub struct TestResult<E> {
-    test: String,
-    result: Result<(), E>,
+pub type TestResult<E> = Result<String, (String, E)>;
+
+pub trait TestResultMethods<E> {
+    fn success(test: String) -> Self;
+    fn failure<F: Into<E>>(test: String, error: F) -> Self;
+    fn name(&self) -> &str;
 }
 
-impl<E> TestResult<E> {
-    pub fn success(test: String) -> Self {
-        Self {
-            test,
-            result: Ok(()),
+impl<E> TestResultMethods<E> for TestResult<E> {
+    fn success(test: String) -> Self {
+        Ok(test)
+    }
+
+    fn failure<F>(test: String, error: F) -> Self
+    where
+        F: Into<E>,
+    {
+        Err((test, error.into()))
+    }
+
+    fn name(&self) -> &str {
+        match *self {
+            Ok(ref test) => test.as_str(),
+            Err((ref test, _)) => test.as_str(),
         }
-    }
-
-    pub fn failure(test: String, error: E) -> Self {
-        Self {
-            test,
-            result: Err(error),
-        }
-    }
-
-    pub fn name(&self) -> &str {
-        self.test.as_str()
-    }
-
-    pub fn result(&self) -> &Result<(), E> {
-        &self.result
     }
 }
