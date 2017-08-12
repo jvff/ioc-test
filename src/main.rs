@@ -1,6 +1,6 @@
 extern crate ioc_test;
 
-use ioc_test::tests::*;
+use ioc_test::tests::run_tests;
 
 fn main() {
     match run_tests() {
