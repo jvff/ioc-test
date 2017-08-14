@@ -21,14 +21,12 @@ mod ioc_test;
 
 mod test;
 
-mod tests;
-
 pub mod line;
 pub mod scpi;
 
 pub use self::ioc_test::IocTestProtocol;
 pub use self::ioc_test::IocTestSetup;
-pub use self::tests::IocTestSpawner;
+pub use self::ioc_test::IocTestSpawner;
 pub use self::test::test_reporter::TestReporter;
 pub use self::test::test_scheduler::TestScheduler;
 pub use self::test::test_spawner::TestSpawner;
