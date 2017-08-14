@@ -7,12 +7,13 @@ use tokio_process::{Child, CommandExt};
 
 pub struct IocSpawn {
     handle: Handle,
+    command: String,
     ip_port: u16,
 }
 
 impl IocSpawn {
-    pub fn new(handle: Handle, ip_port: u16) -> Self {
-        Self { handle, ip_port }
+    pub fn new(handle: Handle, command: String, ip_port: u16) -> Self {
+        Self { handle, command, ip_port }
     }
 }
 
@@ -21,7 +22,7 @@ impl Future for IocSpawn {
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        let process = Command::new("/project/iocBoot/iocagilent33521a/run.sh")
+        let process = Command::new(self.command.as_str())
             .env("IPADDR", "127.0.0.1")
             .env("IPPORT", self.ip_port.to_string())
             .stdout(Stdio::null())

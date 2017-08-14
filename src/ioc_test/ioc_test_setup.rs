@@ -18,6 +18,7 @@ where
     handle: Handle,
     server: MockServer<P::Protocol>,
     ip_port: u16,
+    ioc_command: String,
     ioc_variables_to_set: Vec<(String, String)>,
 }
 
@@ -28,6 +29,7 @@ where
     pub fn new(
         handle: Handle,
         protocol: P::Protocol,
+        ioc_command: &str,
         ip_port: u16,
     ) -> Result<Self> {
         let address = SocketAddr::new("0.0.0.0".parse()?, ip_port);
@@ -37,6 +39,7 @@ where
             handle,
             server,
             ip_port,
+            ioc_command: String::from(ioc_command),
             ioc_variables_to_set: Vec::new(),
             name: String::from("Unnamed IOC test"),
         })
@@ -75,7 +78,9 @@ where
     type Test = IocTest<P>;
 
     fn into_test(self) -> Self::Test {
-        let ioc = IocSpawn::new(self.handle.clone(), self.ip_port);
+        let command = self.ioc_command.clone();
+        let handle = self.handle.clone();
+        let ioc = IocSpawn::new(handle, command, self.ip_port);
         let server = self.server.start(self.handle);
 
         IocTest::new(self.name, ioc, server, self.ioc_variables_to_set)

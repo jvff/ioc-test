@@ -11,14 +11,19 @@ use super::super::test::test_spawner::TestSpawner;
 
 pub struct IocTestSpawner {
     handle: Handle,
+    ioc_command: String,
     ports: Range<u16>,
 }
 
 impl IocTestSpawner {
-    pub fn new(handle: Handle) -> Self {
+    pub fn new(ioc_command: &str, handle: Handle) -> Self {
         let ports = 55000..56000;
 
-        Self { handle, ports }
+        Self {
+            handle,
+            ports,
+            ioc_command: String::from(ioc_command),
+        }
     }
 }
 
@@ -26,8 +31,11 @@ impl TestSpawner for IocTestSpawner {
     type TestSetup = IocTestSetup<ScpiProtocol>;
 
     fn spawn(&mut self) -> Self::TestSetup {
+        let handle = self.handle.clone();
+        let ioc_command = self.ioc_command.as_str();
         let port = self.ports.next().unwrap();
-        let test = IocTestSetup::new(self.handle.clone(), ScpiProtocol, port);
+
+        let test = IocTestSetup::new(handle, ScpiProtocol, ioc_command, port);
         let mut test = test.unwrap();
 
         configure_initial_test_messages(&mut test);
