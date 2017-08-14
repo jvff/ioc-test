@@ -12,7 +12,6 @@ extern crate error_chain;
 
 extern crate termion;
 
-mod line_codec;
 #[macro_use]
 mod mock_service;
 mod mock_server;
@@ -28,7 +27,7 @@ mod test;
 
 mod tests;
 
-pub mod line_protocol;
+pub mod line;
 pub mod scpi;
 
 pub use self::ioc_test::IocTestProtocol;
