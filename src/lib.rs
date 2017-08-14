@@ -16,6 +16,8 @@ extern crate termion;
 mod mock_service;
 mod mock_server;
 
+mod proxy_service;
+
 mod ioc;
 mod ioc_test;
 
