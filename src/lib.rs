@@ -19,10 +19,6 @@ mod mock_server;
 mod ioc;
 mod ioc_test;
 
-mod test_reporter;
-mod test_result;
-mod test_scheduler;
-mod test_spawner;
 mod test;
 
 mod tests;
@@ -33,6 +29,6 @@ pub mod scpi;
 pub use self::ioc_test::IocTestProtocol;
 pub use self::ioc_test::IocTestSetup;
 pub use self::tests::IocTestSpawner;
-pub use self::test_reporter::TestReporter;
-pub use self::test_scheduler::TestScheduler;
-pub use self::test_spawner::TestSpawner;
+pub use self::test::test_reporter::TestReporter;
+pub use self::test::test_scheduler::TestScheduler;
+pub use self::test::test_spawner::TestSpawner;

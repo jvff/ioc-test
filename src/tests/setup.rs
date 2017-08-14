@@ -7,7 +7,7 @@ use super::super::ioc_test::IocTestSetup;
 use super::super::scpi::ScpiProtocol;
 use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
-use super::super::test_spawner::TestSpawner;
+use super::super::test::test_spawner::TestSpawner;
 
 pub struct IocTestSpawner {
     handle: Handle,

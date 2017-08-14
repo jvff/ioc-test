@@ -6,7 +6,7 @@ use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_start::IocTestStart;
 use super::super::ioc::IocSpawn;
 use super::super::mock_server::MockServerStart;
-use super::super::test::Test;
+use super::super::test::test::Test;
 
 pub struct IocTest<P>
 where

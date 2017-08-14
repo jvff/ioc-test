@@ -8,7 +8,7 @@ use super::ioc_test_protocol::IocTestProtocol;
 use super::super::ioc::IocSpawn;
 use super::super::mock_server::MockServer;
 use super::super::mock_service::When;
-use super::super::test::IntoTest;
+use super::super::test::test::IntoTest;
 
 pub struct IocTestSetup<P>
 where
