@@ -6,7 +6,7 @@ use super::super::scpi::ScpiProtocol;
 use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
 
-pub trait Protocol
+pub trait IocTestProtocol
     : ServerProto<
     TcpStream,
     Request = ScpiRequest,
@@ -15,4 +15,4 @@ pub trait Protocol
 > {
 }
 
-impl Protocol for ScpiProtocol {}
+impl IocTestProtocol for ScpiProtocol {}

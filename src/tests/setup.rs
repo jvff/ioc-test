@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use tokio_core::reactor::Handle;
 
-use super::protocol::Protocol;
+use super::super::ioc_test::IocTestProtocol;
 use super::super::ioc_test::IocTestSetup;
 use super::super::scpi::ScpiProtocol;
 use super::super::scpi::ScpiRequest;
@@ -36,7 +36,10 @@ impl TestSpawner for IocTestSpawner {
     }
 }
 
-fn configure_initial_test_messages<P: Protocol>(test: &mut IocTestSetup<P>) {
+fn configure_initial_test_messages<P>(test: &mut IocTestSetup<P>)
+where
+    P: IocTestProtocol,
+{
     request_response_map! { test,
         ScpiRequest::OutputStatus(1) => ScpiResponse::Integer(0),
         ScpiRequest::SourceFrequencyGet(1) => ScpiResponse::Integer(1),

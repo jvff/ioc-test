@@ -4,7 +4,7 @@ macro_rules! tests {
         pub fn add_tests<S, P>(scheduler: &mut TestScheduler<S>)
         where
             S: TestSpawner<TestSetup = IocTestSetup<P>>,
-            P: Protocol,
+            P: IocTestProtocol,
         {
             $(scheduler.add(|mut $test| {
                 $test.name($name);
