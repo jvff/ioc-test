@@ -109,7 +109,7 @@ where
             poll_result = self.scheduler.poll();
         }
 
-        match self.scheduler.poll() {
+        match poll_result {
             Ok(Async::Ready(Some(_))) => {
                 unreachable!(
                     "All available test results should have been reported"
