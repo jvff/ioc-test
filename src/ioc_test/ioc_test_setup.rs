@@ -1,38 +1,35 @@
-use std::fmt::Display;
-use std::hash::Hash;
 use std::net::SocketAddr;
 
-use tokio_core::net::TcpStream;
 use tokio_core::reactor::Handle;
-use tokio_proto::pipeline::ServerProto;
 
 use super::errors::Result;
 use super::ioc_test::IocTest;
+use super::ioc_test_protocol::IocTestProtocol;
 use super::super::ioc::IocSpawn;
-use super::super::mock_server;
 use super::super::mock_server::MockServer;
 use super::super::mock_service::When;
 use super::super::test::IntoTest;
 
 pub struct IocTestSetup<P>
 where
-    P: ServerProto<TcpStream>,
+    P: IocTestProtocol,
 {
     name: String,
     handle: Handle,
-    server: MockServer<P>,
+    server: MockServer<P::Protocol>,
     ip_port: u16,
     ioc_variables_to_set: Vec<(String, String)>,
 }
 
 impl<P> IocTestSetup<P>
 where
-    P: ServerProto<TcpStream>,
-    <P as ServerProto<TcpStream>>::Request: Clone + Display + Eq + Hash,
-    <P as ServerProto<TcpStream>>::Response: Clone,
-    <P as ServerProto<TcpStream>>::Error: Into<mock_server::Error>,
+    P: IocTestProtocol,
 {
-    pub fn new(handle: Handle, protocol: P, ip_port: u16) -> Result<Self> {
+    pub fn new(
+        handle: Handle,
+        protocol: P::Protocol,
+        ip_port: u16,
+    ) -> Result<Self> {
         let address = SocketAddr::new("0.0.0.0".parse()?, ip_port);
         let server = MockServer::new(address, protocol);
 
@@ -51,14 +48,14 @@ where
 
     pub fn when<A>(&mut self, request: A) -> When<P::Request, P::Response>
     where
-        A: Into<<P as ServerProto<TcpStream>>::Request>,
+        A: Into<P::Request>,
     {
         self.server.when(request)
     }
 
     pub fn verify<A>(&mut self, request: A)
     where
-        A: Into<<P as ServerProto<TcpStream>>::Request>,
+        A: Into<P::Request>,
     {
         self.server.verify(request);
     }
@@ -73,10 +70,7 @@ where
 
 impl<P> IntoTest for IocTestSetup<P>
 where
-    P: ServerProto<TcpStream>,
-    <P as ServerProto<TcpStream>>::Request: Clone + Display + Eq + Hash,
-    <P as ServerProto<TcpStream>>::Response: Clone,
-    <P as ServerProto<TcpStream>>::Error: Into<mock_server::Error>,
+    P: IocTestProtocol,
 {
     type Test = IocTest<P>;
 

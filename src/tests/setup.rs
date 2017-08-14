@@ -39,6 +39,8 @@ impl TestSpawner for IocTestSpawner {
 fn configure_initial_test_messages<P>(test: &mut IocTestSetup<P>)
 where
     P: IocTestProtocol,
+    <P as IocTestProtocol>::Request: From<ScpiRequest>,
+    <P as IocTestProtocol>::Response: From<ScpiResponse>,
 {
     request_response_map! { test,
         ScpiRequest::OutputStatus(1) => ScpiResponse::Integer(0),

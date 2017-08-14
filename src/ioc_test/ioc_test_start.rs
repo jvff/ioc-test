@@ -1,38 +1,27 @@
-use std::fmt::Display;
-use std::hash::Hash;
-
 use futures::{Async, Future, Poll};
-use tokio_core::net::TcpStream;
-use tokio_proto::pipeline::ServerProto;
 
 use super::errors::Error;
+use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_start_ioc::IocTestStartIoc;
 use super::super::ioc::IocSpawn;
-use super::super::mock_server;
 use super::super::mock_server::MockServerStart;
 
 pub struct IocTestStart<P>
 where
-    P: ServerProto<TcpStream>,
-    <P as ServerProto<TcpStream>>::Request: Clone + Display + Eq + Hash,
-    <P as ServerProto<TcpStream>>::Response: Clone,
-    <P as ServerProto<TcpStream>>::Error: Into<mock_server::Error>,
+    P: IocTestProtocol,
 {
     ioc: Option<IocSpawn>,
-    server: MockServerStart<P>,
+    server: MockServerStart<P::Protocol>,
     ioc_variables_to_set: Option<Vec<(String, String)>>,
 }
 
 impl<P> IocTestStart<P>
 where
-    P: ServerProto<TcpStream>,
-    <P as ServerProto<TcpStream>>::Request: Clone + Display + Eq + Hash,
-    <P as ServerProto<TcpStream>>::Response: Clone,
-    <P as ServerProto<TcpStream>>::Error: Into<mock_server::Error>,
+    P: IocTestProtocol,
 {
     pub fn new(
         ioc: IocSpawn,
-        server: MockServerStart<P>,
+        server: MockServerStart<P::Protocol>,
         ioc_variables_to_set: Vec<(String, String)>,
     ) -> Self {
         Self {
@@ -57,10 +46,7 @@ where
 
 impl<P> Future for IocTestStart<P>
 where
-    P: ServerProto<TcpStream>,
-    <P as ServerProto<TcpStream>>::Request: Clone + Display + Eq + Hash,
-    <P as ServerProto<TcpStream>>::Response: Clone,
-    <P as ServerProto<TcpStream>>::Error: Into<mock_server::Error>,
+    P: IocTestProtocol,
 {
     type Item = IocTestStartIoc<P>;
     type Error = Error;
