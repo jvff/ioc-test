@@ -18,6 +18,8 @@ mod mock_server;
 
 mod proxy_service;
 
+mod instrumenting_service;
+
 mod ioc;
 mod ioc_test;
 
