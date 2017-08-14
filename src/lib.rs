@@ -31,6 +31,9 @@ pub mod test;
 
 pub mod tests;
 
+pub use self::ioc_test::IocTestProtocol;
+pub use self::ioc_test::IocTestSetup;
 pub use self::tests::IocTestSpawner;
 pub use self::test_reporter::TestReporter;
 pub use self::test_scheduler::TestScheduler;
+pub use self::test_spawner::TestSpawner;
