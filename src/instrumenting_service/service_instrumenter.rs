@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::io;
+use std::ops::Deref;
 
 use tokio_service::NewService;
 
@@ -33,6 +34,17 @@ where
         self.requests_to_verify.insert(request.into());
 
         self
+    }
+}
+
+impl<T> Deref for ServiceInstrumenter<T>
+where
+    T: NewService,
+{
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.factory
     }
 }
 
