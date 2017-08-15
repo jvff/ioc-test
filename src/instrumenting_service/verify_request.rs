@@ -2,13 +2,13 @@ use std::marker::PhantomData;
 
 use super::verifier::Verifier;
 
-pub struct RequestVerifier<A, B> {
+pub struct VerifyRequest<A, B> {
     verified: bool,
     request: A,
     _response: PhantomData<B>,
 }
 
-impl<A, B> RequestVerifier<A, B> {
+impl<A, B> VerifyRequest<A, B> {
     pub fn new(request: A) -> Self {
         Self {
             request,
@@ -18,7 +18,7 @@ impl<A, B> RequestVerifier<A, B> {
     }
 }
 
-impl<A, B> Verifier for RequestVerifier<A, B>
+impl<A, B> Verifier for VerifyRequest<A, B>
 where
     A: Eq,
 {
