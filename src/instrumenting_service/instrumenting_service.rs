@@ -1,55 +1,60 @@
-use std::collections::HashSet;
-use std::hash::Hash;
-use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::sync::{Arc, Mutex};
 
 use tokio_service::Service;
 
-pub struct InstrumentingService<T>
+use super::instrumented_response::InstrumentedResponse;
+use super::verifier::Verifier;
+
+pub struct InstrumentingService<T, V>
 where
     T: Service,
-    <T as Service>::Request: Eq + Hash,
+    V: Verifier<Request = T::Request, Response = T::Response>,
 {
     service: T,
-    requests_to_verify: Arc<Mutex<HashSet<T::Request>>>,
+    verifier: Arc<Mutex<V>>,
 }
 
-impl<T> InstrumentingService<T>
+impl<T, V> InstrumentingService<T, V>
 where
     T: Service,
-    <T as Service>::Request: Eq + Hash,
+    V: Verifier<Request = T::Request, Response = T::Response>,
 {
-    pub fn new(service: T, requests_to_verify: HashSet<T::Request>) -> Self {
+    pub fn new(service: T, verifier: V) -> Self {
         Self {
             service,
-            requests_to_verify: Arc::new(Mutex::new(requests_to_verify)),
+            verifier: Arc::new(Mutex::new(verifier)),
         }
     }
 
-    pub fn has_finished(
-        &self,
-    ) -> Result<bool, PoisonError<MutexGuard<HashSet<T::Request>>>> {
-        Ok(self.requests_to_verify.lock()?.is_empty())
+    pub fn has_finished(&self) -> Result<bool, V::Error> {
+        let verifier = self.verifier.lock().expect(
+            "another thread panicked while holding a lock to a verifier",
+        );
+
+        verifier.has_finished()
     }
 }
 
-impl<T> Service for InstrumentingService<T>
+impl<T, V> Service for InstrumentingService<T, V>
 where
     T: Service,
-    <T as Service>::Request: Eq + Hash,
+    V: Verifier<Request = T::Request, Response = T::Response>,
 {
     type Request = T::Request;
     type Response = T::Response;
     type Error = T::Error;
-    type Future = T::Future;
+    type Future = InstrumentedResponse<T::Future, V>;
 
     fn call(&self, request: Self::Request) -> Self::Future {
-        let mut requests_to_verify = self.requests_to_verify.lock().expect(
-            "another thread panicked while holding a lock for the list of \
-             requests to verify",
+        let mut verifier = self.verifier.lock().expect(
+            "another thread panicked while holding a lock to a verifier",
         );
 
-        requests_to_verify.remove(&request);
+        verifier.request(&request);
 
-        self.service.call(request)
+        InstrumentedResponse::new(
+            self.service.call(request),
+            self.verifier.clone(),
+        )
     }
 }

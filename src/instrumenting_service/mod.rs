@@ -1,3 +1,4 @@
+mod instrumented_response;
 mod instrumenting_service;
 mod service_instrumenter;
 

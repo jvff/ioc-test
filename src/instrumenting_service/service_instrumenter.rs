@@ -1,45 +1,35 @@
-use std::collections::HashSet;
-use std::hash::Hash;
 use std::io;
 use std::ops::Deref;
+use std::sync::{MutexGuard, PoisonError};
 
 use tokio_service::NewService;
 
 use super::instrumenting_service::InstrumentingService;
+use super::verifier::Verifier;
 
-pub struct ServiceInstrumenter<T>
+pub struct ServiceInstrumenter<T, V>
 where
     T: NewService,
+    V: Verifier<Request = T::Request, Response = T::Response>,
 {
     factory: T,
-    requests_to_verify: HashSet<T::Request>,
+    verifier: V,
 }
 
-impl<T> ServiceInstrumenter<T>
+impl<T, V> ServiceInstrumenter<T, V>
 where
     T: NewService,
-    <T as NewService>::Request: Eq + Hash,
+    V: Verifier<Request = T::Request, Response = T::Response>,
 {
-    pub fn new(factory: T) -> Self {
-        Self {
-            factory,
-            requests_to_verify: HashSet::new(),
-        }
-    }
-
-    pub fn verify<C>(&mut self, request: C) -> &mut Self
-    where
-        C: Into<T::Request>,
-    {
-        self.requests_to_verify.insert(request.into());
-
-        self
+    pub fn new(factory: T, verifier: V) -> Self {
+        Self { factory, verifier }
     }
 }
 
-impl<T> Deref for ServiceInstrumenter<T>
+impl<T, V> Deref for ServiceInstrumenter<T, V>
 where
     T: NewService,
+    V: Verifier<Request = T::Request, Response = T::Response>,
 {
     type Target = T;
 
@@ -48,19 +38,20 @@ where
     }
 }
 
-impl<T> NewService for ServiceInstrumenter<T>
+impl<'a, T, V> NewService for ServiceInstrumenter<T, V>
 where
     T: NewService,
-    <T as NewService>::Request: Clone + Eq + Hash,
+    V: Verifier<Request = T::Request, Response = T::Response> + Clone + 'a,
+    <V as Verifier>::Error: From<PoisonError<MutexGuard<'a, V>>>,
 {
     type Request = T::Request;
     type Response = T::Response;
     type Error = T::Error;
-    type Instance = InstrumentingService<T::Instance>;
+    type Instance = InstrumentingService<T::Instance, V>;
 
     fn new_service(&self) -> io::Result<Self::Instance> {
         let service = self.factory.new_service()?;
 
-        Ok(Self::Instance::new(service, self.requests_to_verify.clone()))
+        Ok(Self::Instance::new(service, self.verifier.clone()))
     }
 }
