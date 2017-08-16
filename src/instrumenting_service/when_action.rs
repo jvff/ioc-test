@@ -8,6 +8,6 @@ pub trait WhenAction {
     fn reply_with(&mut self, response: &Self::Response);
     fn verify(
         &mut self,
-        verifier: &BoxedVerifier<Self::Request, Self::Response, ()>,
+        verifier: BoxedVerifier<Self::Request, Self::Response, ()>,
     );
 }

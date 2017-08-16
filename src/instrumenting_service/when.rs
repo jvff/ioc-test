@@ -20,14 +20,6 @@ where
     B: Eq + 'static,
     W: WhenAction<Request = A, Response = B>,
 {
-    pub fn new(request: A) -> Self {
-        Self {
-            request,
-            action: None,
-            response: None,
-        }
-    }
-
     pub fn with_action(request: A, mut action: W) -> Self {
         action.when(&request);
 
@@ -53,19 +45,17 @@ where
         self
     }
 
-    pub fn verify(self) -> BoxedVerifier<A, B, ()> {
-        let verifier = if let Some(response) = self.response {
-            BoxedVerifier::from(
-                VerifyRequestResponse::new(self.request, response),
-            )
-        } else {
-            BoxedVerifier::from(VerifyRequest::new(self.request))
-        };
-
+    pub fn verify(self) {
         if let Some(mut action) = self.action {
-            action.verify(&verifier);
-        }
+            let verifier = if let Some(response) = self.response {
+                BoxedVerifier::from(
+                    VerifyRequestResponse::new(self.request, response),
+                )
+            } else {
+                BoxedVerifier::from(VerifyRequest::new(self.request))
+            };
 
-        verifier
+            action.verify(verifier);
+        }
     }
 }
