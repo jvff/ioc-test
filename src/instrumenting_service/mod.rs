@@ -12,4 +12,5 @@ mod when;
 mod when_action;
 
 pub use self::boxed_verifier::BoxedVerifier;
+pub use self::when::When;
 pub use self::when_action::WhenAction;
