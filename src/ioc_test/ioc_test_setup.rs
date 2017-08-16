@@ -10,7 +10,8 @@ use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::When;
 use super::super::ioc::IocSpawn;
-use super::super::mock_server::MockServer;
+use super::super::mock_server::MockServerStart;
+use super::super::mock_service::MockServiceFactory;
 use super::super::test::test::IntoTest;
 
 pub struct IocTestSetup<P>
@@ -19,10 +20,10 @@ where
 {
     name: String,
     handle: Handle,
-    server: MockServer<P::Protocol>,
     request_map: Arc<Mutex<HashMap<P::Request, P::Response>>>,
     requests_to_verify: Arc<Mutex<HashSet<P::Request>>>,
-    ip_port: u16,
+    protocol: Arc<Mutex<P::Protocol>>,
+    ip_address: SocketAddr,
     ca_server_port: u16,
     ioc_command: String,
     ioc_variables_to_set: Vec<(String, String)>,
@@ -39,14 +40,11 @@ where
         ip_port: u16,
         ca_server_port: u16,
     ) -> Result<Self> {
-        let address = SocketAddr::new("0.0.0.0".parse()?, ip_port);
-        let server = MockServer::new(address, protocol);
-
         Ok(Self {
             handle,
-            server,
-            ip_port,
             ca_server_port,
+            protocol: Arc::new(Mutex::new(protocol)),
+            ip_address: SocketAddr::new("0.0.0.0".parse()?, ip_port),
             request_map: Arc::new(Mutex::new(HashMap::new())),
             requests_to_verify: Arc::new(Mutex::new(HashSet::new())),
             ioc_command: String::from(ioc_command),
@@ -103,12 +101,20 @@ where
     fn into_test(self) -> Self::Test {
         let command = self.ioc_command.clone();
         let handle = self.handle.clone();
-        let ip_port = self.ip_port;
+        let ip_port = self.ip_address.port();
         let ca_server_port = self.ca_server_port;
 
         let ioc = IocSpawn::new(handle, command, ip_port, ca_server_port);
-        let server = self.server
-            .start(self.handle, self.request_map, self.requests_to_verify);
+
+        let service_factory =
+            MockServiceFactory::new(self.request_map, self.requests_to_verify);
+
+        let server = MockServerStart::new(
+            self.ip_address,
+            service_factory,
+            self.protocol,
+            self.handle,
+        );
 
         IocTest::new(self.name, ioc, server, self.ioc_variables_to_set)
     }
