@@ -1,5 +1,4 @@
 mod errors;
-mod expected_request;
 mod handle_request;
 mod mock_service;
 

@@ -7,7 +7,6 @@ use std::sync::{Arc, Mutex};
 use tokio_service::Service;
 
 use super::errors::Result;
-use super::expected_request::ExpectedRequest;
 use super::handle_request::HandleRequest;
 
 pub struct MockService<A, B> {
@@ -20,22 +19,12 @@ where
     A: Eq + Hash,
 {
     pub fn new(
-        expected_requests: Vec<ExpectedRequest<A, B>>,
+        expected_requests: HashMap<A, B>,
         requests_to_verify: HashSet<A>,
     ) -> Self {
-        let number_of_requests = expected_requests.len();
-        let mut request_map = HashMap::with_capacity(number_of_requests);
-
-        for expected_request in expected_requests {
-            let request = expected_request.request;
-            let response = expected_request.response;
-
-            request_map.insert(request, response);
-        }
-
         Self {
             requests_to_verify: Arc::new(Mutex::new(requests_to_verify)),
-            expected_requests: Arc::new(Mutex::new(request_map)),
+            expected_requests: Arc::new(Mutex::new(expected_requests)),
         }
     }
 

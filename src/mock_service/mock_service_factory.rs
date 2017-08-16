@@ -1,11 +1,10 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::hash::Hash;
 use std::io;
 
 use tokio_service::NewService;
 
-use super::expected_request::ExpectedRequest;
 use super::mock_service::MockService;
 use super::when::When;
 
@@ -16,7 +15,7 @@ macro_rules! request_response_map {
 }
 
 pub struct MockServiceFactory<A, B> {
-    expected_requests: Vec<ExpectedRequest<A, B>>,
+    expected_requests: HashMap<A, B>,
     requests_to_verify: HashSet<A>,
 }
 
@@ -26,7 +25,7 @@ where
 {
     pub fn new() -> Self {
         Self {
-            expected_requests: Vec::new(),
+            expected_requests: HashMap::new(),
             requests_to_verify: HashSet::new(),
         }
     }
@@ -39,9 +38,7 @@ where
     }
 
     pub fn expect(&mut self, request: A, response: B) -> &mut Self {
-        let expected_request = ExpectedRequest { request, response };
-
-        self.expected_requests.push(expected_request);
+        self.expected_requests.insert(request, response);
 
         self
     }
