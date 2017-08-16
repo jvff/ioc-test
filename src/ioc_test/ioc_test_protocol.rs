@@ -10,7 +10,7 @@ use super::super::scpi::{ScpiProtocol, ScpiRequest, ScpiResponse};
 
 pub trait IocTestProtocol {
     type Request: 'static + Clone + Display + Eq + Hash;
-    type Response: 'static + Clone;
+    type Response: 'static + Clone + Eq;
     type Error: From<io::Error> + Into<mock_server::Error>;
     type Protocol: ServerProto<
         TcpStream,
