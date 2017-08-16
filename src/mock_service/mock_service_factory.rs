@@ -16,18 +16,21 @@ macro_rules! request_response_map {
 }
 
 pub struct MockServiceFactory<A, B> {
-    expected_requests: HashMap<A, B>,
-    requests_to_verify: HashSet<A>,
+    expected_requests: Arc<Mutex<HashMap<A, B>>>,
+    requests_to_verify: Arc<Mutex<HashSet<A>>>,
 }
 
 impl<A, B> MockServiceFactory<A, B>
 where
     A: Clone + Eq + Hash,
 {
-    pub fn new() -> Self {
+    pub fn new(
+        expected_requests: Arc<Mutex<HashMap<A, B>>>,
+        requests_to_verify: Arc<Mutex<HashSet<A>>>,
+    ) -> Self {
         Self {
-            expected_requests: HashMap::new(),
-            requests_to_verify: HashSet::new(),
+            expected_requests,
+            requests_to_verify,
         }
     }
 
@@ -39,7 +42,14 @@ where
     }
 
     pub fn expect(&mut self, request: A, response: B) -> &mut Self {
-        self.expected_requests.insert(request, response);
+        {
+            let mut expected_requests = self.expected_requests.lock().expect(
+                "another thread panicked while holding a lock to the mock \
+                 request map",
+            );
+
+            expected_requests.insert(request, response);
+        }
 
         self
     }
@@ -48,7 +58,15 @@ where
     where
         C: Into<A>,
     {
-        self.requests_to_verify.insert(request.into());
+        {
+            let mut requests_to_verify =
+                self.requests_to_verify.lock().expect(
+                    "another thread panicked while holding a lock to the mock \
+                     request verification set",
+                );
+
+            requests_to_verify.insert(request.into());
+        }
 
         self
     }
@@ -65,9 +83,8 @@ where
     type Instance = MockService<A, B>;
 
     fn new_service(&self) -> io::Result<Self::Instance> {
-        let requests = Arc::new(Mutex::new(self.expected_requests.clone()));
-        let requests_to_verify =
-            Arc::new(Mutex::new(self.requests_to_verify.clone()));
+        let requests = self.expected_requests.clone();
+        let requests_to_verify = self.requests_to_verify.clone();
 
         Ok(Self::Instance::new(requests, requests_to_verify))
     }
