@@ -4,10 +4,13 @@ pub trait WhenAction {
     type Request;
     type Response;
 
-    fn when(&mut self, request: &Self::Request);
-    fn reply_with(&mut self, response: &Self::Response);
+    fn when(&mut self, _request: &Self::Request) {}
+
+    fn reply_with(&mut self, _response: &Self::Response) {}
+
     fn verify(
         &mut self,
-        verifier: BoxedVerifier<Self::Request, Self::Response, ()>,
-    );
+        _verifier: BoxedVerifier<Self::Request, Self::Response, ()>,
+    ) {
+    }
 }
