@@ -1,4 +1,4 @@
-use super::verifier::Verifier;
+use super::boxed_verifier::BoxedVerifier;
 use super::verify_request::VerifyRequest;
 use super::verify_request_response::VerifyRequestResponse;
 use super::when_action::WhenAction;
@@ -53,17 +53,13 @@ where
         self
     }
 
-    pub fn verify(
-        self,
-    ) -> Box<Verifier<Request = A, Response = B, Error = ()>> {
-        let mut verifier: Box<
-            Verifier<Request = A, Response = B, Error = ()>,
-        >;
-
-        verifier = if let Some(response) = self.response {
-            Box::new(VerifyRequestResponse::new(self.request, response))
+    pub fn verify(self) -> BoxedVerifier<A, B, ()> {
+        let verifier = if let Some(response) = self.response {
+            BoxedVerifier::from(
+                VerifyRequestResponse::new(self.request, response),
+            )
         } else {
-            Box::new(VerifyRequest::new(self.request))
+            BoxedVerifier::from(VerifyRequest::new(self.request))
         };
 
         if let Some(mut action) = self.action {

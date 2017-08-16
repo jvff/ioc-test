@@ -1,4 +1,4 @@
-use super::verifier::Verifier;
+use super::boxed_verifier::BoxedVerifier;
 
 pub trait WhenAction {
     type Request;
@@ -8,12 +8,6 @@ pub trait WhenAction {
     fn reply_with(&mut self, response: &Self::Response);
     fn verify(
         &mut self,
-        verifier: &Box<
-            Verifier<
-                Request = Self::Request,
-                Response = Self::Response,
-                Error = (),
-            >,
-        >,
+        verifier: &BoxedVerifier<Self::Request, Self::Response, ()>,
     );
 }
