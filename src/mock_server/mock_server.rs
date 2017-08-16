@@ -1,3 +1,4 @@
+use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::hash::Hash;
 use std::net::SocketAddr;
@@ -9,7 +10,7 @@ use tokio_proto::pipeline::ServerProto;
 
 use super::errors::Error;
 use super::mock_server_start::MockServerStart;
-use super::super::mock_service::{MockServiceFactory, When};
+use super::super::mock_service::MockServiceFactory;
 
 pub struct MockServer<P>
 where
@@ -35,24 +36,32 @@ where
         }
     }
 
-    pub fn when<A>(&mut self, request: A) -> When<P::Request, P::Response>
-    where
-        A: Into<P::Request>,
-    {
-        self.service_factory.when(request.into())
-    }
-
-    pub fn verify<A>(&mut self, request: A)
-    where
-        A: Into<P::Request>,
-    {
-        self.service_factory.verify(request);
-    }
-
-    pub fn start(self, handle: Handle) -> MockServerStart<P> {
+    pub fn start(
+        mut self,
+        handle: Handle,
+        request_map: Arc<Mutex<HashMap<P::Request, P::Response>>>,
+        requests_to_verify: Arc<Mutex<HashSet<P::Request>>>,
+    ) -> MockServerStart<P> {
         let address = self.address;
         let protocol = self.protocol;
-        let service_factory = self.service_factory;
+        let mut service_factory = self.service_factory;
+
+        let mut request_map = request_map.lock().expect(
+            "another thread panicked while holding a lock to the mock request \
+             map",
+        );
+        let mut requests_to_verify = requests_to_verify.lock().expect(
+            "another thread panicked while holding a lock to the mock request \
+             verification set",
+        );
+
+        for (request, response) in request_map.drain() {
+            service_factory.when(request).reply_with(response);
+        }
+
+        for request in requests_to_verify.drain() {
+            service_factory.verify(request);
+        }
 
         MockServerStart::new(address, service_factory, protocol, handle)
     }

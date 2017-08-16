@@ -92,25 +92,6 @@ where
 
         self.ioc_variables_to_set.push((name, value));
     }
-
-    fn configure_server(&mut self) {
-        let mut request_map = self.request_map.lock().expect(
-            "another thread panicked while holding a lock to the mock request \
-             map",
-        );
-        let mut requests_to_verify = self.requests_to_verify.lock().expect(
-            "another thread panicked while holding a lock to the mock request \
-             verification set",
-        );
-
-        for (request, response) in request_map.drain() {
-            self.server.when(request).reply_with(response);
-        }
-
-        for request in requests_to_verify.drain() {
-            self.server.verify(request);
-        }
-    }
 }
 
 impl<P> IntoTest for IocTestSetup<P>
@@ -119,16 +100,15 @@ where
 {
     type Test = IocTest<P>;
 
-    fn into_test(mut self) -> Self::Test {
-        self.configure_server();
-
+    fn into_test(self) -> Self::Test {
         let command = self.ioc_command.clone();
         let handle = self.handle.clone();
         let ip_port = self.ip_port;
         let ca_server_port = self.ca_server_port;
 
         let ioc = IocSpawn::new(handle, command, ip_port, ca_server_port);
-        let server = self.server.start(self.handle);
+        let server = self.server
+            .start(self.handle, self.request_map, self.requests_to_verify);
 
         IocTest::new(self.name, ioc, server, self.ioc_variables_to_set)
     }
