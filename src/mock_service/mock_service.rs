@@ -19,12 +19,12 @@ where
     A: Eq + Hash,
 {
     pub fn new(
-        expected_requests: HashMap<A, B>,
-        requests_to_verify: HashSet<A>,
+        expected_requests: Arc<Mutex<HashMap<A, B>>>,
+        requests_to_verify: Arc<Mutex<HashSet<A>>>,
     ) -> Self {
         Self {
-            requests_to_verify: Arc::new(Mutex::new(requests_to_verify)),
-            expected_requests: Arc::new(Mutex::new(expected_requests)),
+            requests_to_verify,
+            expected_requests,
         }
     }
 

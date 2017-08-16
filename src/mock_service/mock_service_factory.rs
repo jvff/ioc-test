@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::hash::Hash;
 use std::io;
+use std::sync::{Arc, Mutex};
 
 use tokio_service::NewService;
 
@@ -64,8 +65,9 @@ where
     type Instance = MockService<A, B>;
 
     fn new_service(&self) -> io::Result<Self::Instance> {
-        let requests = self.expected_requests.clone();
-        let requests_to_verify = self.requests_to_verify.clone();
+        let requests = Arc::new(Mutex::new(self.expected_requests.clone()));
+        let requests_to_verify =
+            Arc::new(Mutex::new(self.requests_to_verify.clone()));
 
         Ok(Self::Instance::new(requests, requests_to_verify))
     }
