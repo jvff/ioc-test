@@ -2,6 +2,7 @@ mod instrumented_response;
 mod instrumenting_service;
 mod service_instrumenter;
 
+mod boxed_verifier;
 mod verifier;
 mod verify_request;
 mod verify_request_response;
