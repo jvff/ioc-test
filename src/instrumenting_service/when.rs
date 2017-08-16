@@ -14,10 +14,10 @@ where
     action: Option<W>,
 }
 
-impl<'a, A, B, W> When<A, B, W>
+impl<A, B, W> When<A, B, W>
 where
-    A: 'a + Eq,
-    B: 'a + Eq,
+    A: Eq + 'static,
+    B: Eq + 'static,
     W: WhenAction<Request = A, Response = B>,
 {
     pub fn new(request: A) -> Self {
@@ -55,15 +55,21 @@ where
 
     pub fn verify(
         self,
-    ) -> Box<Verifier<Request = A, Response = B, Error = ()> + 'a> {
-        if let Some(mut action) = self.action {
-            action.verify();
-        }
+    ) -> Box<Verifier<Request = A, Response = B, Error = ()>> {
+        let mut verifier: Box<
+            Verifier<Request = A, Response = B, Error = ()>,
+        >;
 
-        if let Some(response) = self.response {
+        verifier = if let Some(response) = self.response {
             Box::new(VerifyRequestResponse::new(self.request, response))
         } else {
             Box::new(VerifyRequest::new(self.request))
+        };
+
+        if let Some(mut action) = self.action {
+            action.verify(&verifier);
         }
+
+        verifier
     }
 }
