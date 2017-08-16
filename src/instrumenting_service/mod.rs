@@ -10,3 +10,6 @@ mod verify_sequence;
 mod verify_two;
 mod when;
 mod when_action;
+
+pub use self::boxed_verifier::BoxedVerifier;
+pub use self::when_action::WhenAction;
