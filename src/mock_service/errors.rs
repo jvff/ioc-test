@@ -1,7 +1,13 @@
 use std::io;
 use std::sync::PoisonError;
 
+use super::super::scpi;
+
 error_chain! {
+    links {
+        ScpiError(scpi::Error, scpi::ErrorKind);
+    }
+
     errors {
         ExpectedRequestQueueAccess {
             description("failed to access expected requests queue")
