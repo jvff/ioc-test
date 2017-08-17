@@ -7,31 +7,46 @@ use futures::{Async, Future, Poll};
 use tokio_core::net::{TcpListener, TcpStream};
 use tokio_core::reactor::Handle;
 use tokio_proto::pipeline::ServerProto;
+use tokio_service::NewService;
 
 use super::errors::{Error, ErrorKind};
+use super::finite_service::FiniteService;
 use super::listening_mock_server::ListeningMockServer;
-use super::super::mock_service::{MockService, MockServiceFactory};
 
-pub struct MockServerStart<P>
+pub struct MockServerStart<P, S>
 where
-    P: ServerProto<TcpStream>,
+    S: NewService,
+    S::Request: 'static,
+    S::Response: 'static,
+    S::Instance: FiniteService,
+    P: ServerProto<
+        TcpStream,
+        Request = <S as NewService>::Request,
+        Response = <S as NewService>::Response,
+    >,
 {
     address: SocketAddr,
-    service_factory: Option<MockServiceFactory<P::Request, P::Response>>,
+    service_factory: Option<S>,
     protocol: Arc<Mutex<P>>,
     handle: Handle,
 }
 
-impl<P> MockServerStart<P>
+impl<P, S> MockServerStart<P, S>
 where
-    P: ServerProto<TcpStream>,
-    P::Request: Clone + Display + Eq + Hash,
-    P::Response: Clone,
+    S: NewService,
+    S::Instance: FiniteService,
+    S::Request: Clone + Display + Eq + Hash,
+    S::Response: Clone,
+    P: ServerProto<
+        TcpStream,
+        Request = <S as NewService>::Request,
+        Response = <S as NewService>::Response,
+    >,
     P::Error: Into<Error>,
 {
     pub fn new(
         address: SocketAddr,
-        service_factory: MockServiceFactory<P::Request, P::Response>,
+        service_factory: S,
         protocol: Arc<Mutex<P>>,
         handle: Handle,
     ) -> Self {
@@ -45,7 +60,7 @@ where
 
     fn start_server(
         &mut self,
-    ) -> Poll<ListeningMockServer<P, MockService<P::Request, P::Response>>, Error> {
+    ) -> Poll<ListeningMockServer<P, S::Instance>, Error> {
         let listener = TcpListener::bind(&self.address, &self.handle)?;
         let protocol = self.protocol.clone();
 
@@ -61,14 +76,20 @@ where
     }
 }
 
-impl<P> Future for MockServerStart<P>
+impl<P, S> Future for MockServerStart<P, S>
 where
-    P: ServerProto<TcpStream>,
-    P::Request: Clone + Display + Eq + Hash,
-    P::Response: Clone,
+    S: NewService,
+    S::Instance: FiniteService,
+    S::Request: Clone + Display + Eq + Hash,
+    S::Response: Clone,
+    P: ServerProto<
+        TcpStream,
+        Request = <S as NewService>::Request,
+        Response = <S as NewService>::Response,
+    >,
     P::Error: Into<Error>,
 {
-    type Item = ListeningMockServer<P, MockService<P::Request, P::Response>>;
+    type Item = ListeningMockServer<P, S::Instance>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {

@@ -5,13 +5,17 @@ use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_start_ioc::IocTestStartIoc;
 use super::super::ioc::IocSpawn;
 use super::super::mock_server::MockServerStart;
+use super::super::mock_service::MockServiceFactory;
 
 pub struct IocTestStart<P>
 where
     P: IocTestProtocol,
 {
     ioc: Option<IocSpawn>,
-    server: MockServerStart<P::Protocol>,
+    server: MockServerStart<
+        P::Protocol,
+        MockServiceFactory<P::Request, P::Response>,
+    >,
     ioc_variables_to_set: Option<Vec<(String, String)>>,
 }
 
@@ -21,7 +25,10 @@ where
 {
     pub fn new(
         ioc: IocSpawn,
-        server: MockServerStart<P::Protocol>,
+        server: MockServerStart<
+            P::Protocol,
+            MockServiceFactory<P::Request, P::Response>,
+        >,
         ioc_variables_to_set: Vec<(String, String)>,
     ) -> Self {
         Self {
