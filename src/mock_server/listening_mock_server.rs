@@ -11,6 +11,7 @@ use tokio_service::NewService;
 use super::active_mock_server::ActiveMockServer;
 use super::bound_connection_future::BoundConnectionFuture;
 use super::errors::{Error, NormalizeError};
+use super::super::mock_service;
 use super::super::mock_service::MockService;
 use super::super::mock_service::MockServiceFactory;
 
@@ -51,7 +52,7 @@ where
     P: ServerProto<TcpStream>,
     P::Request: Clone + Display + Eq + Hash,
     P::Response: Clone,
-    P::Error: Into<Error>,
+    P::Error: Into<Error> + Into<mock_service::Error>,
 {
     type Item = ActiveMockServer<P::Transport>;
     type Error = Error;

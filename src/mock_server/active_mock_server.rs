@@ -9,6 +9,7 @@ use tokio_service::Service;
 use super::errors::Error;
 use super::finite_service::FiniteService;
 use super::status::Status;
+use super::super::mock_service;
 use super::super::mock_service::{HandleRequest, MockService};
 
 pub struct ActiveMockServer<T>
@@ -19,7 +20,7 @@ where
     service: MockService<T::Item, T::SinkItem>,
     live_requests: FuturesUnordered<HandleRequest<T::Item, T::SinkItem>>,
     live_responses: Vec<T::SinkItem>,
-    status: Status,
+    status: Status<mock_service::Error>,
 }
 
 impl<T> ActiveMockServer<T>
@@ -27,8 +28,8 @@ where
     T: Stream + Sink,
     T::Item: Clone + Display + Eq + Hash,
     T::SinkItem: Clone,
-    T::Error: Into<Error>,
-    T::SinkError: Into<Error>,
+    T::Error: Into<mock_service::Error>,
+    T::SinkError: Into<mock_service::Error>,
 {
     pub fn new(
         connection: T,
@@ -137,8 +138,8 @@ where
     T: Stream + Sink,
     T::Item: Clone + Display + Eq + Hash,
     T::SinkItem: Clone,
-    T::Error: Into<Error>,
-    T::SinkError: Into<Error>,
+    T::Error: Into<mock_service::Error>,
+    T::SinkError: Into<mock_service::Error>,
 {
     type Item = ();
     type Error = Error;

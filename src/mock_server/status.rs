@@ -3,14 +3,14 @@ use futures::{Async, AsyncSink, Poll, StartSend};
 use super::errors::{Error, ErrorKind};
 
 #[derive(Debug)]
-pub enum Status {
+pub enum Status<E> {
     Active,
     Finished,
     WouldBlock,
-    Error(Error),
+    Error(E),
 }
 
-impl Status {
+impl<E> Status<E> {
     pub fn is_active(&self) -> bool {
         match *self {
             Status::Active => true,
@@ -18,7 +18,7 @@ impl Status {
         }
     }
 
-    pub fn update<T: Into<Status>>(&mut self, status_update: T) {
+    pub fn update<T: Into<Status<E>>>(&mut self, status_update: T) {
         let status_update = status_update.into();
 
         if status_update.is_more_severe_than(self) {
@@ -26,7 +26,7 @@ impl Status {
         }
     }
 
-    fn is_more_severe_than(&self, other: &Status) -> bool {
+    fn is_more_severe_than(&self, other: &Status<E>) -> bool {
         match (self, other) {
             (_, &Status::Error(_)) => false,
             (&Status::Error(_), _) => true,
@@ -38,11 +38,11 @@ impl Status {
     }
 }
 
-impl<T, E> From<Poll<T, E>> for Status
+impl<E, U, V> From<Poll<U, V>> for Status<E>
 where
-    E: Into<Error>,
+    V: Into<E>,
 {
-    fn from(poll: Poll<T, E>) -> Status {
+    fn from(poll: Poll<U, V>) -> Status<E> {
         match poll {
             Ok(Async::Ready(_)) => Status::Active,
             Ok(Async::NotReady) => Status::WouldBlock,
@@ -51,11 +51,11 @@ where
     }
 }
 
-impl<T, E> From<StartSend<T, E>> for Status
+impl<E, U, V> From<StartSend<U, V>> for Status<E>
 where
-    E: Into<Error>,
+    V: Into<E>,
 {
-    fn from(start_send: StartSend<T, E>) -> Status {
+    fn from(start_send: StartSend<U, V>) -> Status<E> {
         match start_send {
             Ok(AsyncSink::Ready) => Status::Active,
             Ok(AsyncSink::NotReady(_)) => Status::WouldBlock,
@@ -64,15 +64,21 @@ where
     }
 }
 
-impl Into<Poll<(), Error>> for Status {
-    fn into(self) -> Poll<(), Error> {
+impl<E, V> Into<Poll<(), V>> for Status<E>
+where
+    V: From<Error> + From<E>,
+{
+    fn into(self) -> Poll<(), V> {
         match self {
             Status::Finished => Ok(Async::Ready(())),
             Status::WouldBlock => Ok(Async::NotReady),
-            Status::Error(error) => Err(error),
-            Status::Active => Err(
-                ErrorKind::ActiveStatusHasNoPollEquivalent.into(),
-            ),
+            Status::Error(error) => Err(error.into()),
+            Status::Active => {
+                let error_type = ErrorKind::ActiveStatusHasNoPollEquivalent;
+                let error: Error = error_type.into();
+
+                Err(error.into())
+            }
         }
     }
 }
