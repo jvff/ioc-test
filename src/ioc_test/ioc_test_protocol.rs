@@ -5,13 +5,14 @@ use std::io;
 use tokio_core::net::TcpStream;
 use tokio_proto::pipeline::ServerProto;
 
-use super::super::{mock_server, mock_service, scpi};
+use super::super::{async_server, mock_service, scpi};
 use super::super::scpi::{ScpiProtocol, ScpiRequest, ScpiResponse};
 
 pub trait IocTestProtocol {
     type Request: 'static + Clone + Display + Eq + Hash;
     type Response: 'static + Clone + Eq;
-    type Error: From<io::Error> + Into<mock_server::Error> + Into<mock_service::Error>;
+    type Error:
+        From<io::Error> + Into<async_server::Error> + Into<mock_service::Error>;
     type Protocol: ServerProto<
         TcpStream,
         Request = Self::Request,

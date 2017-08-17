@@ -1,13 +1,13 @@
 use std::io;
 use std::net::AddrParseError;
 
+use super::super::async_server;
 use super::super::ioc;
-use super::super::mock_server;
 
 error_chain! {
     links {
         IocError(ioc::Error, ioc::ErrorKind);
-        ServerError(mock_server::Error, mock_server::ErrorKind);
+        ServerError(async_server::Error, async_server::ErrorKind);
     }
 
     foreign_links {

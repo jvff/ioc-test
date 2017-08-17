@@ -7,7 +7,7 @@ use tokio_service::Service;
 
 use super::errors::{Error, Result};
 use super::handle_request::HandleRequest;
-use super::super::mock_server::FiniteService;
+use super::super::async_server::FiniteService;
 
 pub struct MockService<A, B> {
     expected_requests: Arc<Mutex<HashMap<A, B>>>,

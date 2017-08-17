@@ -4,7 +4,7 @@ use futures::future::Flatten;
 use super::errors::Error;
 use super::ioc_test_protocol::IocTestProtocol;
 use super::super::ioc::IocInstance;
-use super::super::mock_server::ListeningMockServer;
+use super::super::async_server::ListeningMockServer;
 use super::super::mock_service::MockService;
 
 pub struct IocTestExecution<P>

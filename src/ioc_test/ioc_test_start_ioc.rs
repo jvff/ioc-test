@@ -6,7 +6,7 @@ use super::ioc_test_execution::IocTestExecution;
 use super::super::ioc::IocInstance;
 use super::super::ioc::IocProcess;
 use super::super::ioc::IocSpawn;
-use super::super::mock_server::ListeningMockServer;
+use super::super::async_server::ListeningMockServer;
 use super::super::mock_service::MockService;
 
 pub struct IocTestStartIoc<P>

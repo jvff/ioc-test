@@ -14,11 +14,12 @@ extern crate termion;
 
 #[macro_use]
 mod mock_service;
-mod mock_server;
 
 mod proxy_service;
 
 mod instrumenting_service;
+
+mod async_server;
 
 mod ioc;
 mod ioc_test;
