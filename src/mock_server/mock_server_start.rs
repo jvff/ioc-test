@@ -10,7 +10,7 @@ use tokio_proto::pipeline::ServerProto;
 
 use super::errors::{Error, ErrorKind};
 use super::listening_mock_server::ListeningMockServer;
-use super::super::mock_service::MockServiceFactory;
+use super::super::mock_service::{MockService, MockServiceFactory};
 
 pub struct MockServerStart<P>
 where
@@ -43,7 +43,9 @@ where
         }
     }
 
-    fn start_server(&mut self) -> Poll<ListeningMockServer<P>, Error> {
+    fn start_server(
+        &mut self,
+    ) -> Poll<ListeningMockServer<P, MockService<P::Request, P::Response>>, Error> {
         let listener = TcpListener::bind(&self.address, &self.handle)?;
         let protocol = self.protocol.clone();
 
@@ -66,7 +68,7 @@ where
     P::Response: Clone,
     P::Error: Into<Error>,
 {
-    type Item = ListeningMockServer<P>;
+    type Item = ListeningMockServer<P, MockService<P::Request, P::Response>>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {

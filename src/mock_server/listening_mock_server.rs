@@ -11,33 +11,39 @@ use tokio_service::NewService;
 use super::active_mock_server::ActiveMockServer;
 use super::bound_connection_future::BoundConnectionFuture;
 use super::errors::{Error, NormalizeError};
-use super::super::mock_service;
-use super::super::mock_service::MockService;
-use super::super::mock_service::MockServiceFactory;
+use super::finite_service::FiniteService;
 
-pub struct ListeningMockServer<P>
+pub struct ListeningMockServer<P, S>
 where
     P: ServerProto<TcpStream>,
     P::Error: Into<Error>,
+    S: FiniteService<Request = P::Request, Response = P::Response>,
 {
-    connection_and_service: Join<
-        BoundConnectionFuture<P>,
-        FutureResult<MockService<P::Request, P::Response>, Error>,
-    >,
+    connection_and_service:
+        Join<BoundConnectionFuture<P>, FutureResult<S, Error>>,
 }
 
-impl<P> ListeningMockServer<P>
+impl<P, S> ListeningMockServer<P, S>
 where
     P: ServerProto<TcpStream>,
     P::Request: Clone + Display + Eq + Hash,
     P::Response: Clone,
     P::Error: Into<Error>,
+    S: FiniteService<Request = P::Request, Response = P::Response>,
 {
-    pub fn new(
+    pub fn new<F>(
         listener: TcpListener,
-        service_factory: MockServiceFactory<P::Request, P::Response>,
+        service_factory: F,
         protocol: Arc<Mutex<P>>,
-    ) -> Self {
+    ) -> Self
+    where
+        F: NewService<
+            Request = S::Request,
+            Response = S::Response,
+            Error = S::Error,
+            Instance = S,
+        >,
+    {
         let service = service_factory.new_service();
         let connection = BoundConnectionFuture::from(listener, protocol);
 
@@ -47,14 +53,16 @@ where
     }
 }
 
-impl<P> Future for ListeningMockServer<P>
+impl<P, S> Future for ListeningMockServer<P, S>
 where
     P: ServerProto<TcpStream>,
     P::Request: Clone + Display + Eq + Hash,
     P::Response: Clone,
-    P::Error: Into<Error> + Into<mock_service::Error>,
+    P::Error: Into<Error> + Into<S::Error>,
+    S: FiniteService<Request = P::Request, Response = P::Response>,
+    Error: From<S::Error>,
 {
-    type Item = ActiveMockServer<P::Transport, MockService<P::Request, P::Response>>;
+    type Item = ActiveMockServer<P::Transport, S>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {

@@ -7,13 +7,16 @@ use super::super::ioc::IocInstance;
 use super::super::ioc::IocProcess;
 use super::super::ioc::IocSpawn;
 use super::super::mock_server::ListeningMockServer;
+use super::super::mock_service::MockService;
 
 pub struct IocTestStartIoc<P>
 where
     P: IocTestProtocol,
 {
     ioc: IocSpawn,
-    listening_server: Option<ListeningMockServer<P::Protocol>>,
+    listening_server: Option<
+        ListeningMockServer<P::Protocol, MockService<P::Request, P::Response>>,
+    >,
     ioc_variables_to_set: Vec<(String, String)>,
 }
 
@@ -23,7 +26,10 @@ where
 {
     pub fn new(
         ioc: IocSpawn,
-        listening_server: ListeningMockServer<P::Protocol>,
+        listening_server: ListeningMockServer<
+            P::Protocol,
+            MockService<P::Request, P::Response>,
+        >,
         ioc_variables_to_set: Vec<(String, String)>,
     ) -> Self {
         Self {
