@@ -4,37 +4,34 @@ use std::mem;
 
 use futures::{Async, AsyncSink, Future, Poll, Sink, StartSend, Stream};
 use futures::stream::FuturesUnordered;
-use tokio_service::Service;
 
 use super::errors::Error;
 use super::finite_service::FiniteService;
 use super::status::Status;
-use super::super::mock_service;
-use super::super::mock_service::{HandleRequest, MockService};
 
-pub struct ActiveMockServer<T>
+pub struct ActiveMockServer<T, S>
 where
     T: Stream + Sink,
+    S: FiniteService<Request = T::Item, Response = T::SinkItem>,
 {
     connection: T,
-    service: MockService<T::Item, T::SinkItem>,
-    live_requests: FuturesUnordered<HandleRequest<T::Item, T::SinkItem>>,
+    service: S,
+    live_requests: FuturesUnordered<S::Future>,
     live_responses: Vec<T::SinkItem>,
-    status: Status<mock_service::Error>,
+    status: Status<S::Error>,
 }
 
-impl<T> ActiveMockServer<T>
+impl<T, S> ActiveMockServer<T, S>
 where
     T: Stream + Sink,
     T::Item: Clone + Display + Eq + Hash,
     T::SinkItem: Clone,
-    T::Error: Into<mock_service::Error>,
-    T::SinkError: Into<mock_service::Error>,
+    T::Error: Into<S::Error>,
+    T::SinkError: Into<S::Error>,
+    S: FiniteService<Request = T::Item, Response = T::SinkItem>,
+    Status<S::Error>: Into<Poll<(), Error>>,
 {
-    pub fn new(
-        connection: T,
-        service: MockService<T::Item, T::SinkItem>,
-    ) -> Self {
+    pub fn new(connection: T, service: S) -> Self {
         Self {
             connection,
             service,
@@ -133,13 +130,15 @@ where
     }
 }
 
-impl<T> Future for ActiveMockServer<T>
+impl<T, S> Future for ActiveMockServer<T, S>
 where
     T: Stream + Sink,
     T::Item: Clone + Display + Eq + Hash,
     T::SinkItem: Clone,
-    T::Error: Into<mock_service::Error>,
-    T::SinkError: Into<mock_service::Error>,
+    T::Error: Into<S::Error>,
+    T::SinkError: Into<S::Error>,
+    S: FiniteService<Request = T::Item, Response = T::SinkItem>,
+    Status<S::Error>: Into<Poll<(), Error>>,
 {
     type Item = ();
     type Error = Error;

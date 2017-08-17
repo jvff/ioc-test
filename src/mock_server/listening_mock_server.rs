@@ -54,7 +54,7 @@ where
     P::Response: Clone,
     P::Error: Into<Error> + Into<mock_service::Error>,
 {
-    type Item = ActiveMockServer<P::Transport>;
+    type Item = ActiveMockServer<P::Transport, MockService<P::Request, P::Response>>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
