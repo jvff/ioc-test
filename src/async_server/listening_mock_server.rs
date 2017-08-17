@@ -8,7 +8,7 @@ use tokio_core::net::{TcpListener, TcpStream};
 use tokio_proto::pipeline::ServerProto;
 use tokio_service::NewService;
 
-use super::active_mock_server::ActiveMockServer;
+use super::active_server::ActiveServer;
 use super::bound_connection_future::BoundConnectionFuture;
 use super::errors::{Error, NormalizeError};
 use super::finite_service::FiniteService;
@@ -62,13 +62,13 @@ where
     S: FiniteService<Request = P::Request, Response = P::Response>,
     Error: From<S::Error>,
 {
-    type Item = ActiveMockServer<P::Transport, S>;
+    type Item = ActiveServer<P::Transport, S>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let (connection, service) =
             try_ready!(self.connection_and_service.poll());
 
-        Ok(Async::Ready(ActiveMockServer::new(connection, service)))
+        Ok(Async::Ready(ActiveServer::new(connection, service)))
     }
 }

@@ -9,7 +9,7 @@ use super::errors::Error;
 use super::finite_service::FiniteService;
 use super::status::Status;
 
-pub struct ActiveMockServer<T, S>
+pub struct ActiveServer<T, S>
 where
     T: Stream + Sink,
     S: FiniteService<Request = T::Item, Response = T::SinkItem>,
@@ -21,7 +21,7 @@ where
     status: Status<S::Error>,
 }
 
-impl<T, S> ActiveMockServer<T, S>
+impl<T, S> ActiveServer<T, S>
 where
     T: Stream + Sink,
     T::Item: Clone + Display + Eq + Hash,
@@ -130,7 +130,7 @@ where
     }
 }
 
-impl<T, S> Future for ActiveMockServer<T, S>
+impl<T, S> Future for ActiveServer<T, S>
 where
     T: Stream + Sink,
     T::Item: Clone + Display + Eq + Hash,

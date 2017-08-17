@@ -2,7 +2,7 @@ mod errors;
 mod finite_service;
 mod status;
 mod listening_mock_server;
-mod active_mock_server;
+mod active_server;
 mod start_server;
 mod connection_future;
 mod bound_connection_future;
