@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use tokio_service::NewService;
 
+use super::errors::Error;
 use super::mock_service::MockService;
 
 macro_rules! request_response_map {
@@ -41,7 +42,7 @@ where
 {
     type Request = A;
     type Response = B;
-    type Error = io::Error;
+    type Error = Error;
     type Instance = MockService<A, B>;
 
     fn new_service(&self) -> io::Result<Self::Instance> {

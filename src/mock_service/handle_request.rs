@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::hash::Hash;
-use std::io;
 use std::sync::{Arc, Mutex};
 
 use futures::{Async, Future, Poll};
@@ -62,7 +61,7 @@ where
     B: Clone,
 {
     type Item = B;
-    type Error = io::Error;
+    type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         self.handle_request().map_err(|error| error.into())
