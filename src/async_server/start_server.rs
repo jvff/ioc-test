@@ -11,7 +11,7 @@ use tokio_service::NewService;
 
 use super::errors::{Error, ErrorKind};
 use super::finite_service::FiniteService;
-use super::listening_mock_server::ListeningMockServer;
+use super::listening_server::ListeningServer;
 
 pub struct StartServer<P, S>
 where
@@ -58,18 +58,14 @@ where
         }
     }
 
-    fn start_server(
-        &mut self,
-    ) -> Poll<ListeningMockServer<P, S::Instance>, Error> {
+    fn start_server(&mut self) -> Poll<ListeningServer<P, S::Instance>, Error> {
         let listener = TcpListener::bind(&self.address, &self.handle)?;
         let protocol = self.protocol.clone();
 
         if let Some(service_factory) = self.service_factory.take() {
-            Ok(Async::Ready(ListeningMockServer::new(
-                listener,
-                service_factory,
-                protocol,
-            )))
+            Ok(Async::Ready(
+                ListeningServer::new(listener, service_factory, protocol),
+            ))
         } else {
             Err(ErrorKind::AttemptToStartServerTwice.into())
         }
@@ -89,7 +85,7 @@ where
     >,
     P::Error: Into<Error>,
 {
-    type Item = ListeningMockServer<P, S::Instance>;
+    type Item = ListeningServer<P, S::Instance>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {

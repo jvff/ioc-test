@@ -4,7 +4,7 @@ use futures::future::Flatten;
 use super::errors::Error;
 use super::ioc_test_protocol::IocTestProtocol;
 use super::super::ioc::IocInstance;
-use super::super::async_server::ListeningMockServer;
+use super::super::async_server::ListeningServer;
 use super::super::mock_service::MockService;
 
 pub struct IocTestExecution<P>
@@ -12,7 +12,7 @@ where
     P: IocTestProtocol,
 {
     server: Flatten<
-        ListeningMockServer<P::Protocol, MockService<P::Request, P::Response>>,
+        ListeningServer<P::Protocol, MockService<P::Request, P::Response>>,
     >,
     ioc: IocInstance,
 }
@@ -24,10 +24,7 @@ where
     pub fn new(
         ioc: IocInstance,
         server: Flatten<
-            ListeningMockServer<
-                P::Protocol,
-                MockService<P::Request, P::Response>,
-            >,
+            ListeningServer<P::Protocol, MockService<P::Request, P::Response>>,
         >,
     ) -> Self {
         Self { ioc, server }

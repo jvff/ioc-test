@@ -13,7 +13,7 @@ use super::bound_connection_future::BoundConnectionFuture;
 use super::errors::{Error, NormalizeError};
 use super::finite_service::FiniteService;
 
-pub struct ListeningMockServer<P, S>
+pub struct ListeningServer<P, S>
 where
     P: ServerProto<TcpStream>,
     P::Error: Into<Error>,
@@ -23,7 +23,7 @@ where
         Join<BoundConnectionFuture<P>, FutureResult<S, Error>>,
 }
 
-impl<P, S> ListeningMockServer<P, S>
+impl<P, S> ListeningServer<P, S>
 where
     P: ServerProto<TcpStream>,
     P::Request: Clone + Display + Eq + Hash,
@@ -53,7 +53,7 @@ where
     }
 }
 
-impl<P, S> Future for ListeningMockServer<P, S>
+impl<P, S> Future for ListeningServer<P, S>
 where
     P: ServerProto<TcpStream>,
     P::Request: Clone + Display + Eq + Hash,
