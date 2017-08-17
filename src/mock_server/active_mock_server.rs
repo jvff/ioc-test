@@ -7,6 +7,7 @@ use futures::stream::FuturesUnordered;
 use tokio_service::Service;
 
 use super::errors::Error;
+use super::finite_service::FiniteService;
 use super::status::Status;
 use super::super::mock_service::{HandleRequest, MockService};
 
