@@ -10,7 +10,7 @@ use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::When;
 use super::super::ioc::IocSpawn;
-use super::super::async_server::MockServerStart;
+use super::super::async_server::StartServer;
 use super::super::mock_service::MockServiceFactory;
 use super::super::test::test::IntoTest;
 
@@ -109,7 +109,7 @@ where
         let service_factory =
             MockServiceFactory::new(self.request_map, self.requests_to_verify);
 
-        let server = MockServerStart::new(
+        let server = StartServer::new(
             self.ip_address,
             service_factory,
             self.protocol,

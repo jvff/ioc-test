@@ -13,7 +13,7 @@ use super::errors::{Error, ErrorKind};
 use super::finite_service::FiniteService;
 use super::listening_mock_server::ListeningMockServer;
 
-pub struct MockServerStart<P, S>
+pub struct StartServer<P, S>
 where
     S: NewService,
     S::Request: 'static,
@@ -31,7 +31,7 @@ where
     handle: Handle,
 }
 
-impl<P, S> MockServerStart<P, S>
+impl<P, S> StartServer<P, S>
 where
     S: NewService,
     S::Instance: FiniteService,
@@ -76,7 +76,7 @@ where
     }
 }
 
-impl<P, S> Future for MockServerStart<P, S>
+impl<P, S> Future for StartServer<P, S>
 where
     S: NewService,
     S::Instance: FiniteService,
