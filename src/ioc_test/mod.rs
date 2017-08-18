@@ -1,6 +1,7 @@
 mod errors;
 mod ioc_test;
 mod ioc_test_execution;
+mod ioc_test_parameters;
 mod ioc_test_protocol;
 mod ioc_test_setup;
 mod ioc_test_spawner;
