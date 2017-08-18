@@ -15,10 +15,10 @@ where
 
 impl<A, B, W> When<A, B, W>
 where
-    A: Eq + 'static,
-    B: Eq + 'static,
+    A: Eq,
+    B: Eq,
     W: WhenAction<Request = A, Response = B>,
-    W::Error: From<Error> + 'static,
+    W::Error: From<Error>,
 {
     pub fn with_action(request: A, mut action: W) -> Self {
         action.when(&request);

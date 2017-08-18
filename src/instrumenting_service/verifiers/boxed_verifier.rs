@@ -1,13 +1,13 @@
 use super::verifier::Verifier;
 
-pub struct BoxedVerifier<A, B, E> {
-    verifier: Box<Verifier<Request = A, Response = B, Error = E>>,
+pub struct BoxedVerifier<'a, A, B, E> {
+    verifier: Box<Verifier<Request = A, Response = B, Error = E> + 'a>,
 }
 
-impl<A, B, E> BoxedVerifier<A, B, E> {
+impl<'a, A, B, E> BoxedVerifier<'a, A, B, E> {
     pub fn from<V>(verifier: V) -> Self
     where
-        V: Verifier<Request = A, Response = B, Error = E> + 'static,
+        V: Verifier<Request = A, Response = B, Error = E> + 'a,
     {
         Self {
             verifier: Box::new(verifier),
@@ -15,7 +15,7 @@ impl<A, B, E> BoxedVerifier<A, B, E> {
     }
 }
 
-impl<A, B, E> Verifier for BoxedVerifier<A, B, E> {
+impl<'a, A, B, E> Verifier for BoxedVerifier<'a, A, B, E> {
     type Request = A;
     type Response = B;
     type Error = E;
