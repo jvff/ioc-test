@@ -1,4 +1,5 @@
 use super::boxed_verifier::BoxedVerifier;
+use super::converted_error::ConvertedError;
 
 pub trait Verifier {
     type Request;
@@ -14,5 +15,13 @@ pub trait Verifier {
         Self: Sized + 'static,
     {
         BoxedVerifier::from(self)
+    }
+
+    fn convert_error<E>(self) -> ConvertedError<Self, E>
+    where
+        E: From<Self::Error>,
+        Self: Sized,
+    {
+        ConvertedError::new(self)
     }
 }
