@@ -1,3 +1,4 @@
+use super::errors::Error;
 use super::verifier::Verifier;
 
 #[derive(Eq, PartialEq)]
@@ -30,7 +31,7 @@ where
 {
     type Request = A;
     type Response = B;
-    type Error = ();
+    type Error = Error;
 
     fn request(&mut self, request: &Self::Request) {
         if self.status == Status::WaitingForRequest {

@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use super::errors::Error;
 use super::verifier::Verifier;
 
 pub struct VerifyRequest<A, B> {
@@ -24,7 +25,7 @@ where
 {
     type Request = A;
     type Response = B;
-    type Error = ();
+    type Error = Error;
 
     fn request(&mut self, request: &Self::Request) {
         if !self.verified {

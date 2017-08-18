@@ -1,4 +1,4 @@
-use super::verifiers::{Verifier, VerifyRequest, VerifyRequestResponse};
+use super::verifiers::{Error, Verifier, VerifyRequest, VerifyRequestResponse};
 use super::when_action::WhenAction;
 
 pub struct When<A, B, W>
@@ -6,7 +6,7 @@ where
     A: Eq,
     B: Eq,
     W: WhenAction<Request = A, Response = B>,
-    W::Error: From<()>,
+    W::Error: From<Error>,
 {
     request: A,
     response: Option<B>,
@@ -18,7 +18,7 @@ where
     A: Eq + 'static,
     B: Eq + 'static,
     W: WhenAction<Request = A, Response = B>,
-    W::Error: From<()> + 'static,
+    W::Error: From<Error> + 'static,
 {
     pub fn with_action(request: A, mut action: W) -> Self {
         action.when(&request);
