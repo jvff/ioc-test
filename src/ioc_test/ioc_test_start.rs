@@ -2,7 +2,6 @@ use futures::{Async, Future, Poll};
 
 use super::errors::Error;
 use super::ioc_test_parameters::IocTestParameters;
-use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_start_ioc::IocTestStartIoc;
 use super::super::ioc::IocSpawn;
 use super::super::async_server::StartServer;
@@ -12,10 +11,7 @@ where
     P: IocTestParameters,
 {
     ioc: Option<IocSpawn>,
-    server: StartServer<
-        <P::Protocol as IocTestProtocol>::Protocol,
-        P::ServiceFactory,
-    >,
+    server: StartServer<P::Protocol, P::ServiceFactory>,
     ioc_variables_to_set: Option<Vec<(String, String)>>,
 }
 
@@ -25,10 +21,7 @@ where
 {
     pub fn new(
         ioc: IocSpawn,
-        server: StartServer<
-            <P::Protocol as IocTestProtocol>::Protocol,
-            P::ServiceFactory,
-        >,
+        server: StartServer<P::Protocol, P::ServiceFactory>,
         ioc_variables_to_set: Vec<(String, String)>,
     ) -> Self {
         Self {

@@ -7,7 +7,6 @@ use tokio_core::reactor::Handle;
 use super::errors::Result;
 use super::ioc_test::IocTest;
 use super::ioc_test_parameters::IocTestParameters;
-use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::When;
 use super::super::ioc::IocSpawn;
@@ -22,7 +21,7 @@ where
     handle: Handle,
     request_map: Arc<Mutex<HashMap<P::Request, P::Response>>>,
     requests_to_verify: Arc<Mutex<HashSet<P::Request>>>,
-    protocol: Arc<Mutex<<P::Protocol as IocTestProtocol>::Protocol>>,
+    protocol: Arc<Mutex<P::Protocol>>,
     ip_address: SocketAddr,
     ca_server_port: u16,
     ioc_command: String,
@@ -35,7 +34,7 @@ where
 {
     pub fn new(
         handle: Handle,
-        protocol: <P::Protocol as IocTestProtocol>::Protocol,
+        protocol: P::Protocol,
         ioc_command: &str,
         ip_port: u16,
         ca_server_port: u16,

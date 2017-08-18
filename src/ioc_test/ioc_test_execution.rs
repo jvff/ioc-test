@@ -3,7 +3,6 @@ use futures::future::Flatten;
 
 use super::errors::Error;
 use super::ioc_test_parameters::IocTestParameters;
-use super::ioc_test_protocol::IocTestProtocol;
 use super::super::ioc::IocInstance;
 use super::super::async_server;
 use super::super::async_server::ListeningServer;
@@ -13,9 +12,7 @@ where
     P: IocTestParameters,
     P::ServiceError: Into<async_server::Error>,
 {
-    server: Flatten<
-        ListeningServer<<P::Protocol as IocTestProtocol>::Protocol, P::Service>,
-    >,
+    server: Flatten<ListeningServer<P::Protocol, P::Service>>,
     ioc: IocInstance,
 }
 
@@ -25,12 +22,7 @@ where
 {
     pub fn new(
         ioc: IocInstance,
-        server: Flatten<
-            ListeningServer<
-                <P::Protocol as IocTestProtocol>::Protocol,
-                P::Service,
-            >,
-        >,
+        server: Flatten<ListeningServer<P::Protocol, P::Service>>,
     ) -> Self {
         Self { ioc, server }
     }

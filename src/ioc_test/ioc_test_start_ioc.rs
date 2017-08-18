@@ -2,7 +2,6 @@ use futures::{Async, Future, Poll};
 
 use super::errors::Error;
 use super::ioc_test_parameters::IocTestParameters;
-use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_execution::IocTestExecution;
 use super::super::ioc::IocInstance;
 use super::super::ioc::IocProcess;
@@ -14,9 +13,7 @@ where
     P: IocTestParameters,
 {
     ioc: IocSpawn,
-    listening_server: Option<
-        ListeningServer<<P::Protocol as IocTestProtocol>::Protocol, P::Service>,
-    >,
+    listening_server: Option<ListeningServer<P::Protocol, P::Service>>,
     ioc_variables_to_set: Vec<(String, String)>,
 }
 
@@ -26,10 +23,7 @@ where
 {
     pub fn new(
         ioc: IocSpawn,
-        listening_server: ListeningServer<
-            <P::Protocol as IocTestProtocol>::Protocol,
-            P::Service,
-        >,
+        listening_server: ListeningServer<P::Protocol, P::Service>,
         ioc_variables_to_set: Vec<(String, String)>,
     ) -> Self {
         Self {

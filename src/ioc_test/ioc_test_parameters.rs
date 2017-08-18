@@ -10,7 +10,6 @@ use tokio_proto::pipeline::ServerProto;
 use tokio_service::NewService;
 
 use super::errors::Error;
-use super::ioc_test_protocol::IocTestProtocol;
 use super::super::async_server;
 use super::super::async_server::FiniteService;
 use super::super::mock_service;
@@ -23,12 +22,7 @@ pub trait IocTestParameters {
         + Into<Error>
         + Into<async_server::Error>
         + Into<mock_service::Error>;
-    type Protocol: IocTestProtocol<
-        Request = Self::Request,
-        Response = Self::Response,
-        Error = Self::ProtocolError,
-    >
-        + ServerProto<
+    type Protocol: ServerProto<
         TcpStream,
         Request = Self::Request,
         Response = Self::Response,
@@ -55,36 +49,26 @@ pub trait IocTestParameters {
 
 pub struct MockTestParameters<P>
 where
-    P: IocTestProtocol,
+    P: ServerProto<TcpStream>,
 {
     _protocol: PhantomData<P>,
 }
 
 impl<P> IocTestParameters for MockTestParameters<P>
 where
-    P: IocTestProtocol
-        + ServerProto<
-        TcpStream,
-        Request = <P as IocTestProtocol>::Request,
-        Response = <P as IocTestProtocol>::Response,
-        Error = <P as IocTestProtocol>::Error,
-    >,
-    <P as IocTestProtocol>::Error: Into<mock_service::Error> + Into<Error>,
-    mock_service::Error: From<<P as IocTestProtocol>::Error>,
+    P: ServerProto<TcpStream>,
+    P::Request: Clone + Display + Eq + Hash,
+    P::Response: Clone + Eq,
+    P::Error: Into<async_server::Error> + Into<Error>,
+    mock_service::Error: From<P::Error>,
 {
-    type Request = <P as IocTestProtocol>::Request;
-    type Response = <P as IocTestProtocol>::Response;
-    type ProtocolError = <P as ServerProto<TcpStream>>::Error;
+    type Request = P::Request;
+    type Response = P::Response;
+    type ProtocolError = P::Error;
     type Protocol = P;
     type ServiceError = mock_service::Error;
-    type Service = MockService<
-        <P as IocTestProtocol>::Request,
-        <P as IocTestProtocol>::Response,
-    >;
-    type ServiceFactory = MockServiceFactory<
-        <P as IocTestProtocol>::Request,
-        <P as IocTestProtocol>::Response,
-    >;
+    type Service = MockService<P::Request, P::Response>;
+    type ServiceFactory = MockServiceFactory<P::Request, P::Response>;
 
     fn create_service_factory(
         expected_requests: Arc<Mutex<HashMap<Self::Request, Self::Response>>>,
