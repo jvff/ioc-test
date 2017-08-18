@@ -29,7 +29,7 @@ where
     T::Error: Into<S::Error>,
     T::SinkError: Into<S::Error>,
     S: FiniteService<Request = T::Item, Response = T::SinkItem>,
-    Status<S::Error>: Into<Poll<(), Error>>,
+    S::Error: Into<Error>,
 {
     pub fn new(connection: T, service: S) -> Self {
         Self {
@@ -117,7 +117,7 @@ where
                 self.status = match self.service.has_finished() {
                     Ok(true) => Status::Finished,
                     Ok(false) => Status::Active,
-                    Err(error) => Status::Error(error.into()),
+                    Err(error) => Status::Error(error),
                 }
             }
         }
@@ -138,7 +138,7 @@ where
     T::Error: Into<S::Error>,
     T::SinkError: Into<S::Error>,
     S: FiniteService<Request = T::Item, Response = T::SinkItem>,
-    Status<S::Error>: Into<Poll<(), Error>>,
+    S::Error: Into<Error>,
 {
     type Item = ();
     type Error = Error;
