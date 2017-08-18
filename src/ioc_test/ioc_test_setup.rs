@@ -97,7 +97,7 @@ impl<P> IntoTest for IocTestSetup<P>
 where
     P: IocTestParameters,
 {
-    type Test = IocTest<P::Protocol>;
+    type Test = IocTest<P>;
 
     fn into_test(self) -> Self::Test {
         let command = self.ioc_command.clone();

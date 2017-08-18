@@ -2,6 +2,7 @@ use futures::{Future, Poll};
 use futures::future::Flatten;
 
 use super::errors::Error;
+use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_start::IocTestStart;
 use super::super::async_server::StartServer;
@@ -11,21 +12,21 @@ use super::super::test::test::Test;
 
 pub struct IocTest<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     name: String,
-    future: Flatten<Flatten<IocTestStart<P>>>,
+    future: Flatten<Flatten<IocTestStart<P::Protocol>>>,
 }
 
 impl<P> IocTest<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     pub fn new(
         name: String,
         ioc: IocSpawn,
         server: StartServer<
-            P::Protocol,
+            <P::Protocol as IocTestProtocol>::Protocol,
             MockServiceFactory<P::Request, P::Response>,
         >,
         ioc_variables_to_set: Vec<(String, String)>,
@@ -41,7 +42,7 @@ where
 
 impl<P> Test for IocTest<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     type Error = Error;
 
