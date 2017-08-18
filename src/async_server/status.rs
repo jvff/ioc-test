@@ -64,11 +64,11 @@ where
     }
 }
 
-impl<E, V> Into<Poll<(), V>> for Status<E>
+impl<E> Into<Poll<(), Error>> for Status<E>
 where
-    V: From<Error> + From<E>,
+    E: Into<Error>,
 {
-    fn into(self) -> Poll<(), V> {
+    fn into(self) -> Poll<(), Error> {
         match self {
             Status::Finished => Ok(Async::Ready(())),
             Status::WouldBlock => Ok(Async::NotReady),
