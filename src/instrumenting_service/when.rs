@@ -1,5 +1,6 @@
-use super::verifiers::{Error, Verifier, VerifyRequest, VerifyRequestResponse};
+use super::verifiers::Error;
 use super::when_action::WhenAction;
+use super::when_verifier::WhenVerifier;
 
 pub struct When<A, B, W>
 where
@@ -48,11 +49,9 @@ where
     pub fn verify(self) {
         if let Some(mut action) = self.action {
             let verifier = if let Some(response) = self.response {
-                VerifyRequestResponse::new(self.request, response)
-                    .convert_error()
-                    .boxed()
+                WhenVerifier::for_request_response(self.request, response)
             } else {
-                VerifyRequest::new(self.request).convert_error().boxed()
+                WhenVerifier::for_request(self.request)
             };
 
             action.verify(verifier);

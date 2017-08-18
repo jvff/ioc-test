@@ -3,8 +3,7 @@ use std::hash::Hash;
 use std::sync::{Arc, Mutex};
 
 use super::super::instrumenting_service::verifiers;
-use super::super::instrumenting_service::verifiers::BoxedVerifier;
-use super::super::instrumenting_service::WhenAction;
+use super::super::instrumenting_service::{WhenAction, WhenVerifier};
 
 pub struct IocTestWhenAction<A, B> {
     request: Option<A>,
@@ -51,7 +50,7 @@ where
 
     fn verify(
         &mut self,
-        _verifier: BoxedVerifier<Self::Request, Self::Response, Self::Error>,
+        _verifier: WhenVerifier<Self::Request, Self::Response>,
     ) {
         if let Some(ref request) = self.request {
             let mut requests_to_verify =
