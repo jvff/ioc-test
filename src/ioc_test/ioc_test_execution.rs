@@ -2,6 +2,7 @@ use futures::{Async, Future, Poll};
 use futures::future::Flatten;
 
 use super::errors::Error;
+use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_protocol::IocTestProtocol;
 use super::super::ioc::IocInstance;
 use super::super::async_server::ListeningServer;
@@ -9,22 +10,28 @@ use super::super::mock_service::MockService;
 
 pub struct IocTestExecution<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     server: Flatten<
-        ListeningServer<P::Protocol, MockService<P::Request, P::Response>>,
+        ListeningServer<
+            <P::Protocol as IocTestProtocol>::Protocol,
+            MockService<P::Request, P::Response>,
+        >,
     >,
     ioc: IocInstance,
 }
 
 impl<P> IocTestExecution<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     pub fn new(
         ioc: IocInstance,
         server: Flatten<
-            ListeningServer<P::Protocol, MockService<P::Request, P::Response>>,
+            ListeningServer<
+                <P::Protocol as IocTestProtocol>::Protocol,
+                MockService<P::Request, P::Response>,
+            >,
         >,
     ) -> Self {
         Self { ioc, server }
@@ -47,7 +54,7 @@ where
 
 impl<P> Future for IocTestExecution<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     type Item = ();
     type Error = Error;
