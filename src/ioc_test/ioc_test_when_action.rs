@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::sync::{Arc, Mutex};
 
-use super::super::instrumenting_service::verifiers;
 use super::super::instrumenting_service::{WhenAction, WhenVerifier};
 
 pub struct IocTestWhenAction<A, B> {
@@ -31,7 +30,6 @@ where
 {
     type Request = A;
     type Response = B;
-    type Error = verifiers::Error;
 
     fn when(&mut self, request: &Self::Request) {
         self.request = Some(request.clone());

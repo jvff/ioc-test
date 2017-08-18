@@ -1,4 +1,3 @@
-use super::verifiers::Error;
 use super::when_action::WhenAction;
 use super::when_verifier::WhenVerifier;
 
@@ -7,7 +6,6 @@ where
     A: Eq,
     B: Eq,
     W: WhenAction<Request = A, Response = B>,
-    W::Error: From<Error>,
 {
     request: A,
     response: Option<B>,
@@ -19,7 +17,6 @@ where
     A: Eq,
     B: Eq,
     W: WhenAction<Request = A, Response = B>,
-    W::Error: From<Error>,
 {
     pub fn with_action(request: A, mut action: W) -> Self {
         action.when(&request);

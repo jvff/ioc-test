@@ -3,7 +3,6 @@ use super::when_verifier::WhenVerifier;
 pub trait WhenAction {
     type Request;
     type Response;
-    type Error;
 
     fn when(&mut self, _request: &Self::Request) {}
 
