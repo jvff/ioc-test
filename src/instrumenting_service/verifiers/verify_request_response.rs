@@ -1,13 +1,14 @@
 use super::errors::Error;
 use super::verifier::Verifier;
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 enum Status {
     WaitingForRequest,
     RequestVerified,
     Verified,
 }
 
+#[derive(Clone)]
 pub struct VerifyRequestResponse<A, B> {
     request: A,
     response: B,

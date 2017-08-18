@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use super::errors::Error;
 use super::verifier::Verifier;
 
+#[derive(Clone)]
 pub struct VerifyRequest<A, B> {
     verified: bool,
     request: A,

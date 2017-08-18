@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use super::verifier::Verifier;
 
+#[derive(Clone)]
 pub struct ConvertedError<V, E>
 where
     V: Verifier,

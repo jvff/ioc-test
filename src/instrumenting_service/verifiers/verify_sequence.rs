@@ -1,5 +1,6 @@
 use super::verifier::Verifier;
 
+#[derive(Clone)]
 pub struct VerifySequence<A, B>
 where
     A: Verifier,
