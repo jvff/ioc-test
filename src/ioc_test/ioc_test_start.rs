@@ -1,6 +1,7 @@
 use futures::{Async, Future, Poll};
 
 use super::errors::Error;
+use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_start_ioc::IocTestStartIoc;
 use super::super::ioc::IocSpawn;
@@ -9,22 +10,24 @@ use super::super::mock_service::MockServiceFactory;
 
 pub struct IocTestStart<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     ioc: Option<IocSpawn>,
-    server:
-        StartServer<P::Protocol, MockServiceFactory<P::Request, P::Response>>,
+    server: StartServer<
+        <P::Protocol as IocTestProtocol>::Protocol,
+        MockServiceFactory<P::Request, P::Response>,
+    >,
     ioc_variables_to_set: Option<Vec<(String, String)>>,
 }
 
 impl<P> IocTestStart<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     pub fn new(
         ioc: IocSpawn,
         server: StartServer<
-            P::Protocol,
+            <P::Protocol as IocTestProtocol>::Protocol,
             MockServiceFactory<P::Request, P::Response>,
         >,
         ioc_variables_to_set: Vec<(String, String)>,
@@ -51,9 +54,9 @@ where
 
 impl<P> Future for IocTestStart<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
-    type Item = IocTestStartIoc<P>;
+    type Item = IocTestStartIoc<P::Protocol>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {

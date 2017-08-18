@@ -15,7 +15,7 @@ where
     P: IocTestParameters,
 {
     name: String,
-    future: Flatten<Flatten<IocTestStart<P::Protocol>>>,
+    future: Flatten<Flatten<IocTestStart<P>>>,
 }
 
 impl<P> IocTest<P>
