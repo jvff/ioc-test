@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use super::verifier::Verifier;
+use super::verifier_factory::VerifierFactory;
 
 #[derive(Clone)]
 pub struct ConvertedError<V, E>
@@ -44,5 +45,17 @@ where
 
     fn has_finished(&self) -> Result<bool, Self::Error> {
         self.verifier.has_finished().map_err(|error| error.into())
+    }
+}
+
+impl<V, E> VerifierFactory for ConvertedError<V, E>
+where
+    V: Verifier + VerifierFactory,
+    E: From<V::Error> + From<<V::Verifier as Verifier>::Error>,
+{
+    type Verifier = ConvertedError<V::Verifier, E>;
+
+    fn create(&mut self) -> Self::Verifier {
+        ConvertedError::new(self.verifier.create())
     }
 }

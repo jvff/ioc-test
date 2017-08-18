@@ -1,4 +1,5 @@
 use super::verifier::Verifier;
+use super::verifier_factory::VerifierFactory;
 
 #[derive(Clone)]
 pub struct VerifySequence<A, B>
@@ -50,5 +51,23 @@ where
             Ok(true) => self.second.has_finished(),
             result => result,
         }
+    }
+}
+
+impl<A, B> VerifierFactory for VerifySequence<A, B>
+where
+    A: Verifier + VerifierFactory,
+    B: Verifier<Request = A::Request, Response = A::Response, Error = A::Error>
+        + VerifierFactory,
+    B::Verifier: Verifier<
+        Request = <A::Verifier as Verifier>::Request,
+        Response = <A::Verifier as Verifier>::Response,
+        Error = <A::Verifier as Verifier>::Error,
+    >,
+{
+    type Verifier = VerifySequence<A::Verifier, B::Verifier>;
+
+    fn create(&mut self) -> Self::Verifier {
+        VerifySequence::new(self.first.create(), self.second.create())
     }
 }

@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use super::errors::Error;
 use super::verifier::Verifier;
+use super::verifier_factory::VerifierFactory;
 
 #[derive(Clone)]
 pub struct VerifyRequest<A, B> {
@@ -38,5 +39,16 @@ where
 
     fn has_finished(&self) -> Result<bool, Self::Error> {
         Ok(self.verified)
+    }
+}
+
+impl<A, B> VerifierFactory for VerifyRequest<A, B>
+where
+    A: Clone + Eq,
+{
+    type Verifier = Self;
+
+    fn create(&mut self) -> Self::Verifier {
+        VerifyRequest::new(self.request.clone())
     }
 }

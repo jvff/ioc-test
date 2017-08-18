@@ -1,5 +1,6 @@
 use super::errors::Error;
 use super::verifier::Verifier;
+use super::verifier_factory::VerifierFactory;
 
 #[derive(Clone, Eq, PartialEq)]
 enum Status {
@@ -54,5 +55,17 @@ where
 
     fn has_finished(&self) -> Result<bool, Self::Error> {
         Ok(self.status == Status::Verified)
+    }
+}
+
+impl<A, B> VerifierFactory for VerifyRequestResponse<A, B>
+where
+    A: Clone + Eq,
+    B: Clone + Eq,
+{
+    type Verifier = Self;
+
+    fn create(&mut self) -> Self::Verifier {
+        VerifyRequestResponse::new(self.request.clone(), self.response.clone())
     }
 }
