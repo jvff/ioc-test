@@ -4,6 +4,10 @@ use std::sync::PoisonError;
 use super::super::scpi;
 
 error_chain! {
+    foreign_links {
+        IoError(io::Error);
+    }
+
     links {
         ScpiError(scpi::Error, scpi::ErrorKind);
     }
@@ -32,11 +36,5 @@ error_chain! {
 impl<T> From<PoisonError<T>> for Error {
     fn from(_: PoisonError<T>) -> Self {
         ErrorKind::ExpectedRequestQueueAccess.into()
-    }
-}
-
-impl Into<io::Error> for Error {
-    fn into(self) -> io::Error {
-        io::Error::new(io::ErrorKind::Other, self.to_string())
     }
 }
