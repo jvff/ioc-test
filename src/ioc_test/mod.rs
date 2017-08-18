@@ -13,6 +13,7 @@ mod ioc_test_when_action;
 pub mod macros;
 
 pub use self::errors::{Error, ErrorKind, Result};
+pub use self::ioc_test_parameters::{IocTestParameters, MockTestParameters};
 pub use self::ioc_test_protocol::IocTestProtocol;
 pub use self::ioc_test_setup::IocTestSetup;
 pub use self::ioc_test_spawner::IocTestSpawner;

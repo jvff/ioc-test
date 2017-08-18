@@ -2,8 +2,8 @@ use std::ops::Range;
 
 use tokio_core::reactor::Handle;
 
-use super::super::ioc_test::IocTestProtocol;
-use super::super::ioc_test::IocTestSetup;
+use super::ioc_test_parameters::{IocTestParameters, MockTestParameters};
+use super::ioc_test_setup::IocTestSetup;
 use super::super::scpi::ScpiProtocol;
 use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
@@ -28,7 +28,7 @@ impl IocTestSpawner {
 }
 
 impl TestSpawner for IocTestSpawner {
-    type TestSetup = IocTestSetup<ScpiProtocol>;
+    type TestSetup = IocTestSetup<MockTestParameters<ScpiProtocol>>;
 
     fn spawn(&mut self) -> Self::TestSetup {
         let handle = self.handle.clone();
@@ -53,9 +53,9 @@ impl TestSpawner for IocTestSpawner {
 
 fn configure_initial_test_messages<P>(test: &mut IocTestSetup<P>)
 where
-    P: IocTestProtocol,
-    <P as IocTestProtocol>::Request: From<ScpiRequest>,
-    <P as IocTestProtocol>::Response: From<ScpiResponse>,
+    P: IocTestParameters,
+    P::Request: From<ScpiRequest>,
+    P::Response: From<ScpiResponse>,
 {
     request_response_map! { test,
         ScpiRequest::OutputStatus(1) => ScpiResponse::Integer(0),

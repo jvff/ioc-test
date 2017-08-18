@@ -29,9 +29,8 @@ mod test;
 pub mod line;
 pub mod scpi;
 
-pub use self::ioc_test::IocTestProtocol;
-pub use self::ioc_test::IocTestSetup;
-pub use self::ioc_test::IocTestSpawner;
+pub use self::ioc_test::{IocTestParameters, IocTestProtocol, IocTestSetup,
+                         IocTestSpawner, MockTestParameters};
 pub use self::test::test_reporter::TestReporter;
 pub use self::test::test_scheduler::TestScheduler;
 pub use self::test::test_spawner::TestSpawner;

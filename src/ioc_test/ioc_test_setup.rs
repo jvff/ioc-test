@@ -6,6 +6,7 @@ use tokio_core::reactor::Handle;
 
 use super::errors::Result;
 use super::ioc_test::IocTest;
+use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::When;
@@ -16,13 +17,13 @@ use super::super::test::test::IntoTest;
 
 pub struct IocTestSetup<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     name: String,
     handle: Handle,
     request_map: Arc<Mutex<HashMap<P::Request, P::Response>>>,
     requests_to_verify: Arc<Mutex<HashSet<P::Request>>>,
-    protocol: Arc<Mutex<P::Protocol>>,
+    protocol: Arc<Mutex<<P::Protocol as IocTestProtocol>::Protocol>>,
     ip_address: SocketAddr,
     ca_server_port: u16,
     ioc_command: String,
@@ -31,11 +32,11 @@ where
 
 impl<P> IocTestSetup<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
     pub fn new(
         handle: Handle,
-        protocol: P::Protocol,
+        protocol: <P::Protocol as IocTestProtocol>::Protocol,
         ioc_command: &str,
         ip_port: u16,
         ca_server_port: u16,
@@ -94,9 +95,9 @@ where
 
 impl<P> IntoTest for IocTestSetup<P>
 where
-    P: IocTestProtocol,
+    P: IocTestParameters,
 {
-    type Test = IocTest<P>;
+    type Test = IocTest<P::Protocol>;
 
     fn into_test(self) -> Self::Test {
         let command = self.ioc_command.clone();
