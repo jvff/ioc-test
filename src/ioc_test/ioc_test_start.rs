@@ -56,7 +56,7 @@ impl<P> Future for IocTestStart<P>
 where
     P: IocTestParameters,
 {
-    type Item = IocTestStartIoc<P::Protocol>;
+    type Item = IocTestStartIoc<P>;
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
