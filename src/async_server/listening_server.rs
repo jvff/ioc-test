@@ -60,7 +60,7 @@ where
     P::Response: Clone,
     P::Error: Into<Error> + Into<S::Error>,
     S: FiniteService<Request = P::Request, Response = P::Response>,
-    Error: From<S::Error>,
+    S::Error: Into<Error>,
 {
     type Item = ActiveServer<P::Transport, S>;
     type Error = Error;
