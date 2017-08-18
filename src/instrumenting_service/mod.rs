@@ -4,6 +4,7 @@ mod service_instrumenter;
 
 mod when;
 mod when_action;
+mod when_verifier;
 
 pub use self::when::When;
 pub use self::when_action::WhenAction;
