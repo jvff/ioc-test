@@ -1,6 +1,6 @@
-use super::boxed_verifier::BoxedVerifier;
-use super::verify_request::VerifyRequest;
-use super::verify_request_response::VerifyRequestResponse;
+use super::verifiers::BoxedVerifier;
+use super::verifiers::VerifyRequest;
+use super::verifiers::VerifyRequestResponse;
 use super::when_action::WhenAction;
 
 pub struct When<A, B, W>

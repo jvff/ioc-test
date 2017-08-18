@@ -4,7 +4,7 @@ use tokio_service::Service;
 
 use super::instrumented_response::InstrumentedResponse;
 use super::super::async_server::FiniteService;
-use super::verifier::Verifier;
+use super::verifiers::Verifier;
 
 pub struct InstrumentingService<T, V>
 where

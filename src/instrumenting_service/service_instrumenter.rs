@@ -5,7 +5,7 @@ use std::sync::{MutexGuard, PoisonError};
 use tokio_service::NewService;
 
 use super::instrumenting_service::InstrumentingService;
-use super::verifier::Verifier;
+use super::verifiers::Verifier;
 
 pub struct ServiceInstrumenter<T, V>
 where

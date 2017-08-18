@@ -1,4 +1,4 @@
-use super::boxed_verifier::BoxedVerifier;
+use super::verifiers::BoxedVerifier;
 
 pub trait WhenAction {
     type Request;

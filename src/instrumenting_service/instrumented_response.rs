@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use futures::{Async, Future, Poll};
 
-use super::verifier::Verifier;
+use super::verifiers::Verifier;
 
 pub struct InstrumentedResponse<F, V>
 where

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::sync::{Arc, Mutex};
 
-use super::super::instrumenting_service::BoxedVerifier;
+use super::super::instrumenting_service::verifiers::BoxedVerifier;
 use super::super::instrumenting_service::WhenAction;
 
 pub struct IocTestWhenAction<A, B> {
