@@ -8,7 +8,7 @@ use super::errors::Result;
 use super::ioc_test::IocTest;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_when_action::IocTestWhenAction;
-use super::super::instrumenting_service::When;
+use super::super::instrumenting_service::{When, WhenVerifier};
 use super::super::ioc::IocSpawn;
 use super::super::async_server::StartServer;
 use super::super::test::test::IntoTest;
@@ -21,6 +21,7 @@ where
     handle: Handle,
     request_map: Arc<Mutex<HashMap<P::Request, P::Response>>>,
     requests_to_verify: Arc<Mutex<HashSet<P::Request>>>,
+    verifiers: Arc<Mutex<Vec<WhenVerifier<P::Request, P::Response>>>>,
     protocol: Arc<Mutex<P::Protocol>>,
     ip_address: SocketAddr,
     ca_server_port: u16,
@@ -46,6 +47,7 @@ where
             ip_address: SocketAddr::new("0.0.0.0".parse()?, ip_port),
             request_map: Arc::new(Mutex::new(HashMap::new())),
             requests_to_verify: Arc::new(Mutex::new(HashSet::new())),
+            verifiers: Arc::new(Mutex::new(Vec::new())),
             ioc_command: String::from(ioc_command),
             ioc_variables_to_set: Vec::new(),
             name: String::from("Unnamed IOC test"),
@@ -66,6 +68,7 @@ where
         let action = IocTestWhenAction::new(
             self.request_map.clone(),
             self.requests_to_verify.clone(),
+            self.verifiers.clone(),
         );
 
         When::with_action(request.into(), action)

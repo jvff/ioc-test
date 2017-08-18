@@ -8,16 +8,19 @@ pub struct IocTestWhenAction<A, B> {
     request: Option<A>,
     request_map: Arc<Mutex<HashMap<A, B>>>,
     requests_to_verify: Arc<Mutex<HashSet<A>>>,
+    verifiers: Arc<Mutex<Vec<WhenVerifier<A, B>>>>,
 }
 
 impl<A, B> IocTestWhenAction<A, B> {
     pub fn new(
         request_map: Arc<Mutex<HashMap<A, B>>>,
         requests_to_verify: Arc<Mutex<HashSet<A>>>,
+        verifiers: Arc<Mutex<Vec<WhenVerifier<A, B>>>>,
     ) -> Self {
         Self {
             request_map,
             requests_to_verify,
+            verifiers,
             request: None,
         }
     }
@@ -48,7 +51,7 @@ where
 
     fn verify(
         &mut self,
-        _verifier: WhenVerifier<Self::Request, Self::Response>,
+        verifier: WhenVerifier<Self::Request, Self::Response>,
     ) {
         if let Some(ref request) = self.request {
             let mut requests_to_verify =
@@ -58,6 +61,13 @@ where
                 );
 
             requests_to_verify.insert(request.clone());
+
+            let mut verifiers = self.verifiers.lock().expect(
+                "another thread panicked while holding a lock to the list of \
+                 verifiers",
+            );
+
+            verifiers.push(verifier);
         }
     }
 }
