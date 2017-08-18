@@ -7,7 +7,6 @@ use super::ioc_test_protocol::IocTestProtocol;
 use super::ioc_test_start::IocTestStart;
 use super::super::async_server::StartServer;
 use super::super::ioc::IocSpawn;
-use super::super::mock_service::MockServiceFactory;
 use super::super::test::test::Test;
 
 pub struct IocTest<P>
@@ -27,7 +26,7 @@ where
         ioc: IocSpawn,
         server: StartServer<
             <P::Protocol as IocTestProtocol>::Protocol,
-            MockServiceFactory<P::Request, P::Response>,
+            P::ServiceFactory,
         >,
         ioc_variables_to_set: Vec<(String, String)>,
     ) -> Self {

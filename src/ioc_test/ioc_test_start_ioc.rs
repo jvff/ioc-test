@@ -8,7 +8,6 @@ use super::super::ioc::IocInstance;
 use super::super::ioc::IocProcess;
 use super::super::ioc::IocSpawn;
 use super::super::async_server::ListeningServer;
-use super::super::mock_service::MockService;
 
 pub struct IocTestStartIoc<P>
 where
@@ -16,10 +15,7 @@ where
 {
     ioc: IocSpawn,
     listening_server: Option<
-        ListeningServer<
-            <P::Protocol as IocTestProtocol>::Protocol,
-            MockService<P::Request, P::Response>,
-        >,
+        ListeningServer<<P::Protocol as IocTestProtocol>::Protocol, P::Service>,
     >,
     ioc_variables_to_set: Vec<(String, String)>,
 }
@@ -32,7 +28,7 @@ where
         ioc: IocSpawn,
         listening_server: ListeningServer<
             <P::Protocol as IocTestProtocol>::Protocol,
-            MockService<P::Request, P::Response>,
+            P::Service,
         >,
         ioc_variables_to_set: Vec<(String, String)>,
     ) -> Self {

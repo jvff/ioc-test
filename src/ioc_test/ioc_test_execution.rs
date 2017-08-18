@@ -5,18 +5,16 @@ use super::errors::Error;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_protocol::IocTestProtocol;
 use super::super::ioc::IocInstance;
+use super::super::async_server;
 use super::super::async_server::ListeningServer;
-use super::super::mock_service::MockService;
 
 pub struct IocTestExecution<P>
 where
     P: IocTestParameters,
+    P::ServiceError: Into<async_server::Error>,
 {
     server: Flatten<
-        ListeningServer<
-            <P::Protocol as IocTestProtocol>::Protocol,
-            MockService<P::Request, P::Response>,
-        >,
+        ListeningServer<<P::Protocol as IocTestProtocol>::Protocol, P::Service>,
     >,
     ioc: IocInstance,
 }
@@ -30,7 +28,7 @@ where
         server: Flatten<
             ListeningServer<
                 <P::Protocol as IocTestProtocol>::Protocol,
-                MockService<P::Request, P::Response>,
+                P::Service,
             >,
         >,
     ) -> Self {

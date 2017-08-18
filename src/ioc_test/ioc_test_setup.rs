@@ -12,7 +12,6 @@ use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::When;
 use super::super::ioc::IocSpawn;
 use super::super::async_server::StartServer;
-use super::super::mock_service::MockServiceFactory;
 use super::super::test::test::IntoTest;
 
 pub struct IocTestSetup<P>
@@ -107,8 +106,10 @@ where
 
         let ioc = IocSpawn::new(handle, command, ip_port, ca_server_port);
 
-        let service_factory =
-            MockServiceFactory::new(self.request_map, self.requests_to_verify);
+        let service_factory = P::create_service_factory(
+            self.request_map,
+            self.requests_to_verify,
+        );
 
         let server = StartServer::new(
             self.ip_address,
