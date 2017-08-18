@@ -1,6 +1,4 @@
-use super::verifiers::BoxedVerifier;
-use super::verifiers::VerifyRequest;
-use super::verifiers::VerifyRequestResponse;
+use super::verifiers::{Verifier, VerifyRequest, VerifyRequestResponse};
 use super::when_action::WhenAction;
 
 pub struct When<A, B, W>
@@ -8,6 +6,7 @@ where
     A: Eq,
     B: Eq,
     W: WhenAction<Request = A, Response = B>,
+    W::Error: From<()>,
 {
     request: A,
     response: Option<B>,
@@ -19,6 +18,7 @@ where
     A: Eq + 'static,
     B: Eq + 'static,
     W: WhenAction<Request = A, Response = B>,
+    W::Error: From<()> + 'static,
 {
     pub fn with_action(request: A, mut action: W) -> Self {
         action.when(&request);
@@ -48,11 +48,11 @@ where
     pub fn verify(self) {
         if let Some(mut action) = self.action {
             let verifier = if let Some(response) = self.response {
-                BoxedVerifier::from(
-                    VerifyRequestResponse::new(self.request, response),
-                )
+                VerifyRequestResponse::new(self.request, response)
+                    .convert_error()
+                    .boxed()
             } else {
-                BoxedVerifier::from(VerifyRequest::new(self.request))
+                VerifyRequest::new(self.request).convert_error().boxed()
             };
 
             action.verify(verifier);

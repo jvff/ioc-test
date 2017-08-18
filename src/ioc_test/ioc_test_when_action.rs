@@ -31,6 +31,7 @@ where
 {
     type Request = A;
     type Response = B;
+    type Error = ();
 
     fn when(&mut self, request: &Self::Request) {
         self.request = Some(request.clone());
@@ -49,7 +50,7 @@ where
 
     fn verify(
         &mut self,
-        _verifier: BoxedVerifier<Self::Request, Self::Response, ()>,
+        _verifier: BoxedVerifier<Self::Request, Self::Response, Self::Error>,
     ) {
         if let Some(ref request) = self.request {
             let mut requests_to_verify =

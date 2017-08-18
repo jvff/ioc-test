@@ -3,6 +3,7 @@ use super::verifiers::BoxedVerifier;
 pub trait WhenAction {
     type Request;
     type Response;
+    type Error;
 
     fn when(&mut self, _request: &Self::Request) {}
 
@@ -10,7 +11,7 @@ pub trait WhenAction {
 
     fn verify(
         &mut self,
-        _verifier: BoxedVerifier<Self::Request, Self::Response, ()>,
+        _verifier: BoxedVerifier<Self::Request, Self::Response, Self::Error>,
     ) {
     }
 }
