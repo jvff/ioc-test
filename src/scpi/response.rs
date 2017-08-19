@@ -12,10 +12,12 @@ impl ScpiResponse {
         match *self {
             ScpiResponse::Empty => {}
             ScpiResponse::Integer(value) => {
-                buffer.extend(value.to_string().as_bytes())
+                buffer.extend(value.to_string().as_bytes());
+                buffer.extend("\n".as_bytes())
             }
             ScpiResponse::Utf8String(ref string) => {
-                buffer.extend(string.as_bytes())
+                buffer.extend(string.as_bytes());
+                buffer.extend("\n".as_bytes())
             }
         }
     }
