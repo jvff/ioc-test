@@ -17,7 +17,7 @@ pub struct IocTestSpawner {
 
 impl IocTestSpawner {
     pub fn new(ioc_command: &str, handle: Handle) -> Self {
-        let ports = 55000..56000;
+        let ports = 55000..60000;
 
         Self {
             handle,
@@ -33,9 +33,16 @@ impl TestSpawner for IocTestSpawner {
     fn spawn(&mut self) -> Self::TestSetup {
         let handle = self.handle.clone();
         let ioc_command = self.ioc_command.as_str();
-        let port = self.ports.next().unwrap();
+        let ip_port = self.ports.next().unwrap();
+        let ca_server_port = self.ports.next().unwrap();
 
-        let test = IocTestSetup::new(handle, ScpiProtocol, ioc_command, port);
+        let test = IocTestSetup::new(
+            handle,
+            ScpiProtocol,
+            ioc_command,
+            ip_port,
+            ca_server_port,
+        );
         let mut test = test.unwrap();
 
         configure_initial_test_messages(&mut test);
