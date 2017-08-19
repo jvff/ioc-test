@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::sync::{Arc, Mutex};
@@ -10,7 +10,6 @@ use super::errors::{Error, ErrorKind};
 pub struct HandleRequest<A, B> {
     request: A,
     expected_requests: Arc<Mutex<HashMap<A, B>>>,
-    remaining_requests: Arc<Mutex<HashSet<A>>>,
 }
 
 impl<A, B> HandleRequest<A, B>
@@ -21,12 +20,10 @@ where
     pub fn new(
         request: A,
         expected_requests: Arc<Mutex<HashMap<A, B>>>,
-        remaining_requests: Arc<Mutex<HashSet<A>>>,
     ) -> Self {
         Self {
             request,
             expected_requests,
-            remaining_requests,
         }
     }
 
@@ -41,10 +38,6 @@ where
     }
 
     fn reply_to_request(&self, response: B) -> Poll<B, Error> {
-        let mut remaining_requests = self.remaining_requests.lock()?;
-
-        remaining_requests.remove(&self.request);
-
         Ok(Async::Ready(response))
     }
 

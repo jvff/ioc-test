@@ -83,10 +83,7 @@ where
         expected_requests: Arc<Mutex<HashMap<Self::Request, Self::Response>>>,
         requests_to_verify: Arc<Mutex<HashSet<Self::Request>>>,
     ) -> Self::ServiceFactory {
-        let mock_service_factory = MockServiceFactory::new(
-            expected_requests,
-            requests_to_verify.clone(),
-        );
+        let mock_service_factory = MockServiceFactory::new(expected_requests);
 
         let requests_to_verify = requests_to_verify.lock().expect(
             "another thread panicked while holding a lock to the list of \
