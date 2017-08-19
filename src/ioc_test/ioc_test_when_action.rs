@@ -1,21 +1,24 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
-use std::sync::{Arc, Mutex};
 
 use super::super::instrumenting_service::{WhenAction, WhenVerifier};
 
-pub struct IocTestWhenAction<A, B> {
+pub struct IocTestWhenAction<'a, A, B>
+where
+    A: 'a,
+    B: 'a,
+{
     request: Option<A>,
-    request_map: Arc<Mutex<HashMap<A, B>>>,
-    requests_to_verify: Arc<Mutex<HashSet<A>>>,
-    verifiers: Arc<Mutex<Vec<WhenVerifier<A, B>>>>,
+    request_map: &'a mut HashMap<A, B>,
+    requests_to_verify: &'a mut HashSet<A>,
+    verifiers: &'a mut Vec<WhenVerifier<A, B>>,
 }
 
-impl<A, B> IocTestWhenAction<A, B> {
+impl<'a, A, B> IocTestWhenAction<'a, A, B> {
     pub fn new(
-        request_map: Arc<Mutex<HashMap<A, B>>>,
-        requests_to_verify: Arc<Mutex<HashSet<A>>>,
-        verifiers: Arc<Mutex<Vec<WhenVerifier<A, B>>>>,
+        request_map: &'a mut HashMap<A, B>,
+        requests_to_verify: &'a mut HashSet<A>,
+        verifiers: &'a mut Vec<WhenVerifier<A, B>>,
     ) -> Self {
         Self {
             request_map,
@@ -26,7 +29,7 @@ impl<A, B> IocTestWhenAction<A, B> {
     }
 }
 
-impl<A, B> WhenAction for IocTestWhenAction<A, B>
+impl<'a, A, B> WhenAction for IocTestWhenAction<'a, A, B>
 where
     A: Clone + Eq + Hash,
     B: Clone,
@@ -40,12 +43,7 @@ where
 
     fn reply_with(&mut self, response: &Self::Response) {
         if let Some(ref request) = self.request {
-            let mut request_map = self.request_map.lock().expect(
-                "another thread panicked while holding a lock to the mock \
-                 request map",
-            );
-
-            request_map.insert(request.clone(), response.clone());
+            self.request_map.insert(request.clone(), response.clone());
         }
     }
 
@@ -54,20 +52,8 @@ where
         verifier: WhenVerifier<Self::Request, Self::Response>,
     ) {
         if let Some(ref request) = self.request {
-            let mut requests_to_verify =
-                self.requests_to_verify.lock().expect(
-                    "another thread panicked while holding a lock to the mock \
-                     request verification set",
-                );
-
-            requests_to_verify.insert(request.clone());
-
-            let mut verifiers = self.verifiers.lock().expect(
-                "another thread panicked while holding a lock to the list of \
-                 verifiers",
-            );
-
-            verifiers.push(verifier);
+            self.requests_to_verify.insert(request.clone());
+            self.verifiers.push(verifier);
         }
     }
 }

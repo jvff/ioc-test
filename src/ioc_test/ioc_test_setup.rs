@@ -19,9 +19,9 @@ where
 {
     name: String,
     handle: Handle,
-    request_map: Arc<Mutex<HashMap<P::Request, P::Response>>>,
-    requests_to_verify: Arc<Mutex<HashSet<P::Request>>>,
-    verifiers: Arc<Mutex<Vec<WhenVerifier<P::Request, P::Response>>>>,
+    request_map: HashMap<P::Request, P::Response>,
+    requests_to_verify: HashSet<P::Request>,
+    verifiers: Vec<WhenVerifier<P::Request, P::Response>>,
     protocol: Arc<Mutex<P::Protocol>>,
     ip_address: SocketAddr,
     ca_server_port: u16,
@@ -45,9 +45,9 @@ where
             ca_server_port,
             protocol: Arc::new(Mutex::new(protocol)),
             ip_address: SocketAddr::new("0.0.0.0".parse()?, ip_port),
-            request_map: Arc::new(Mutex::new(HashMap::new())),
-            requests_to_verify: Arc::new(Mutex::new(HashSet::new())),
-            verifiers: Arc::new(Mutex::new(Vec::new())),
+            request_map: HashMap::new(),
+            requests_to_verify: HashSet::new(),
+            verifiers: Vec::new(),
             ioc_command: String::from(ioc_command),
             ioc_variables_to_set: Vec::new(),
             name: String::from("Unnamed IOC test"),
@@ -66,9 +66,9 @@ where
         A: Into<P::Request>,
     {
         let action = IocTestWhenAction::new(
-            self.request_map.clone(),
-            self.requests_to_verify.clone(),
-            self.verifiers.clone(),
+            &mut self.request_map,
+            &mut self.requests_to_verify,
+            &mut self.verifiers,
         );
 
         When::with_action(request.into(), action)
@@ -78,12 +78,7 @@ where
     where
         A: Into<P::Request>,
     {
-        let mut requests_to_verify = self.requests_to_verify.lock().expect(
-            "another thread panicked while holding a lock to the mock request \
-             verification set",
-        );
-
-        requests_to_verify.insert(request.into());
+        self.requests_to_verify.insert(request.into());
     }
 
     pub fn set_variable(&mut self, name: &str, value: &str) {
@@ -109,8 +104,8 @@ where
         let ioc = IocSpawn::new(handle, command, ip_port, ca_server_port);
 
         let service_factory = P::create_service_factory(
-            self.request_map,
-            self.requests_to_verify,
+            Arc::new(Mutex::new(self.request_map)),
+            Arc::new(Mutex::new(self.requests_to_verify)),
         );
 
         let server = StartServer::new(
