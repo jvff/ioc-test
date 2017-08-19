@@ -45,8 +45,8 @@ pub trait IocTestParameters {
     >;
 
     fn create_service_factory(
-        expected_requests: Arc<Mutex<HashMap<Self::Request, Self::Response>>>,
-        requests_to_verify: Arc<Mutex<HashSet<Self::Request>>>,
+        expected_requests: HashMap<Self::Request, Self::Response>,
+        requests_to_verify: HashSet<Self::Request>,
     ) -> Self::ServiceFactory;
 }
 
@@ -80,15 +80,11 @@ where
     >;
 
     fn create_service_factory(
-        expected_requests: Arc<Mutex<HashMap<Self::Request, Self::Response>>>,
-        requests_to_verify: Arc<Mutex<HashSet<Self::Request>>>,
+        expected_requests: HashMap<Self::Request, Self::Response>,
+        requests_to_verify: HashSet<Self::Request>,
     ) -> Self::ServiceFactory {
-        let mock_service_factory = MockServiceFactory::new(expected_requests);
-
-        let requests_to_verify = requests_to_verify.lock().expect(
-            "another thread panicked while holding a lock to the list of \
-             verifiers",
-        );
+        let mock_service_factory =
+            MockServiceFactory::new(Arc::new(Mutex::new(expected_requests)));
 
         let verifiers = requests_to_verify
             .iter()

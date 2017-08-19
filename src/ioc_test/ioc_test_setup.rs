@@ -104,8 +104,8 @@ where
         let ioc = IocSpawn::new(handle, command, ip_port, ca_server_port);
 
         let service_factory = P::create_service_factory(
-            Arc::new(Mutex::new(self.request_map)),
-            Arc::new(Mutex::new(self.requests_to_verify)),
+            self.request_map,
+            self.requests_to_verify,
         );
 
         let server = StartServer::new(
