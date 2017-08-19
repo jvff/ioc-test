@@ -12,6 +12,9 @@ use tokio_service::NewService;
 use super::errors::Error;
 use super::super::async_server;
 use super::super::async_server::FiniteService;
+use super::super::instrumenting_service::{InstrumentingService,
+                                          ServiceInstrumenter};
+use super::super::instrumenting_service::verifiers::{VerifyAll, VerifyRequest};
 use super::super::mock_service;
 use super::super::mock_service::{MockService, MockServiceFactory};
 
@@ -67,13 +70,37 @@ where
     type ProtocolError = P::Error;
     type Protocol = P;
     type ServiceError = mock_service::Error;
-    type Service = MockService<P::Request, P::Response>;
-    type ServiceFactory = MockServiceFactory<P::Request, P::Response>;
+    type Service = InstrumentingService<
+        MockService<P::Request, P::Response>,
+        VerifyAll<VerifyRequest<P::Request, P::Response>>,
+    >;
+    type ServiceFactory = ServiceInstrumenter<
+        MockServiceFactory<P::Request, P::Response>,
+        VerifyAll<VerifyRequest<P::Request, P::Response>>,
+    >;
 
     fn create_service_factory(
         expected_requests: Arc<Mutex<HashMap<Self::Request, Self::Response>>>,
         requests_to_verify: Arc<Mutex<HashSet<Self::Request>>>,
     ) -> Self::ServiceFactory {
-        MockServiceFactory::new(expected_requests, requests_to_verify)
+        let mock_service_factory = MockServiceFactory::new(
+            expected_requests,
+            requests_to_verify.clone(),
+        );
+
+        let requests_to_verify = requests_to_verify.lock().expect(
+            "another thread panicked while holding a lock to the list of \
+             verifiers",
+        );
+
+        let verifiers = requests_to_verify
+            .iter()
+            .cloned()
+            .map(VerifyRequest::new)
+            .collect();
+
+        let verifier = VerifyAll::new(verifiers);
+
+        ServiceInstrumenter::new(mock_service_factory, verifier)
     }
 }
