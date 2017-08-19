@@ -31,20 +31,12 @@ where
         let expected_requests = self.expected_requests.lock()?;
 
         if let Some(response) = expected_requests.get(&self.request) {
-            self.reply_to_request(response.clone())
+            Ok(Async::Ready(response.clone()))
         } else {
-            self.unexpected_request()
+            let request = self.request.to_string();
+
+            Err(ErrorKind::UnexpectedRequest(request).into())
         }
-    }
-
-    fn reply_to_request(&self, response: B) -> Poll<B, Error> {
-        Ok(Async::Ready(response))
-    }
-
-    fn unexpected_request(&self) -> Poll<B, Error> {
-        Err(
-            ErrorKind::UnexpectedRequest(self.request.to_string()).into(),
-        )
     }
 }
 
