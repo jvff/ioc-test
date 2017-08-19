@@ -11,7 +11,7 @@ mod verify_two;
 
 pub use self::boxed_verifier::BoxedVerifier;
 pub use self::converted_error::ConvertedError;
-pub use self::errors::{Error, Result};
+pub use self::errors::{Error, ErrorKind, Result};
 pub use self::verifier::Verifier;
 pub use self::verifier_factory::VerifierFactory;
 pub use self::verify_all::VerifyAll;

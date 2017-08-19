@@ -1,6 +1,7 @@
 use std::io;
 use std::sync::PoisonError;
 
+use super::super::instrumenting_service::verifiers;
 use super::super::scpi;
 
 error_chain! {
@@ -10,6 +11,7 @@ error_chain! {
 
     links {
         ScpiError(scpi::Error, scpi::ErrorKind);
+        VerifierError(verifiers::Error, verifiers::ErrorKind);
     }
 
     errors {
