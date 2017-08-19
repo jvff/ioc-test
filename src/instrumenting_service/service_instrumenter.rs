@@ -1,11 +1,10 @@
 use std::io;
 use std::ops::Deref;
-use std::sync::{MutexGuard, PoisonError};
 
 use tokio_service::NewService;
 
 use super::instrumenting_service::InstrumentingService;
-use super::verifiers::Verifier;
+use super::verifiers::{Verifier, VerifierFactory};
 
 pub struct ServiceInstrumenter<T, V>
 where
@@ -38,20 +37,20 @@ where
     }
 }
 
-impl<'a, T, V> NewService for ServiceInstrumenter<T, V>
+impl<T, V> NewService for ServiceInstrumenter<T, V>
 where
     T: NewService,
-    V: Verifier<Request = T::Request, Response = T::Response> + Clone + 'a,
-    <V as Verifier>::Error: From<PoisonError<MutexGuard<'a, V>>>,
+    V: Verifier<Request = T::Request, Response = T::Response> + VerifierFactory,
+    V::Verifier: Verifier<Request = T::Request, Response = T::Response>,
 {
     type Request = T::Request;
     type Response = T::Response;
     type Error = T::Error;
-    type Instance = InstrumentingService<T::Instance, V>;
+    type Instance = InstrumentingService<T::Instance, V::Verifier>;
 
     fn new_service(&self) -> io::Result<Self::Instance> {
         let service = self.factory.new_service()?;
 
-        Ok(Self::Instance::new(service, self.verifier.clone()))
+        Ok(Self::Instance::new(service, self.verifier.create()))
     }
 }
