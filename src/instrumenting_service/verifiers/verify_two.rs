@@ -58,7 +58,7 @@ where
 {
     type Verifier = VerifyTwo<A::Verifier, B::Verifier>;
 
-    fn create(&mut self) -> Self::Verifier {
+    fn create(&self) -> Self::Verifier {
         VerifyTwo::new(self.first.create(), self.second.create())
     }
 }

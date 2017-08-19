@@ -67,12 +67,12 @@ where
 {
     type Verifier = WhenVerifier<A, B>;
 
-    fn create(&mut self) -> Self::Verifier {
+    fn create(&self) -> Self::Verifier {
         match *self {
-            WhenVerifier::Request(ref mut verifier) => WhenVerifier::Request(
+            WhenVerifier::Request(ref verifier) => WhenVerifier::Request(
                 verifier.create(),
             ),
-            WhenVerifier::RequestResponse(ref mut verifier) => {
+            WhenVerifier::RequestResponse(ref verifier) => {
                 WhenVerifier::RequestResponse(verifier.create())
             }
         }

@@ -65,7 +65,7 @@ where
 {
     type Verifier = Self;
 
-    fn create(&mut self) -> Self::Verifier {
+    fn create(&self) -> Self::Verifier {
         VerifyRequestResponse::new(self.request.clone(), self.response.clone())
     }
 }

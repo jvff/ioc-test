@@ -55,7 +55,7 @@ where
 {
     type Verifier = ConvertedError<V::Verifier, E>;
 
-    fn create(&mut self) -> Self::Verifier {
+    fn create(&self) -> Self::Verifier {
         ConvertedError::new(self.verifier.create())
     }
 }

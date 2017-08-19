@@ -55,9 +55,9 @@ where
 {
     type Verifier = VerifyAll<V::Verifier>;
 
-    fn create(&mut self) -> Self::Verifier {
+    fn create(&self) -> Self::Verifier {
         let verifiers = self.verifiers
-            .iter_mut()
+            .iter()
             .map(|factory| factory.create())
             .collect();
 
