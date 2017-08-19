@@ -6,21 +6,21 @@ use super::instrumented_response::InstrumentedResponse;
 use super::super::async_server::FiniteService;
 use super::verifiers::Verifier;
 
-pub struct InstrumentingService<T, V>
+pub struct InstrumentingService<S, V>
 where
-    T: Service,
-    V: Verifier<Request = T::Request, Response = T::Response>,
+    S: Service,
+    V: Verifier<Request = S::Request, Response = S::Response>,
 {
-    service: T,
+    service: S,
     verifier: Arc<Mutex<V>>,
 }
 
-impl<T, V> InstrumentingService<T, V>
+impl<S, V> InstrumentingService<S, V>
 where
-    T: Service,
-    V: Verifier<Request = T::Request, Response = T::Response>,
+    S: Service,
+    V: Verifier<Request = S::Request, Response = S::Response>,
 {
-    pub fn new(service: T, verifier: V) -> Self {
+    pub fn new(service: S, verifier: V) -> Self {
         Self {
             service,
             verifier: Arc::new(Mutex::new(verifier)),
@@ -28,15 +28,15 @@ where
     }
 }
 
-impl<T, V> Service for InstrumentingService<T, V>
+impl<S, V> Service for InstrumentingService<S, V>
 where
-    T: Service,
-    V: Verifier<Request = T::Request, Response = T::Response>,
+    S: Service,
+    V: Verifier<Request = S::Request, Response = S::Response>,
 {
-    type Request = T::Request;
-    type Response = T::Response;
-    type Error = T::Error;
-    type Future = InstrumentedResponse<T::Future, V>;
+    type Request = S::Request;
+    type Response = S::Response;
+    type Error = S::Error;
+    type Future = InstrumentedResponse<S::Future, V>;
 
     fn call(&self, request: Self::Request) -> Self::Future {
         let mut verifier = self.verifier.lock().expect(
@@ -52,13 +52,13 @@ where
     }
 }
 
-impl<T, V> FiniteService for InstrumentingService<T, V>
+impl<S, V> FiniteService for InstrumentingService<S, V>
 where
-    T: Service,
-    V: Verifier<Request = T::Request, Response = T::Response>,
-    T::Error: From<V::Error>,
+    S: Service,
+    V: Verifier<Request = S::Request, Response = S::Response>,
+    S::Error: From<V::Error>,
 {
-    fn has_finished(&self) -> Result<bool, T::Error> {
+    fn has_finished(&self) -> Result<bool, S::Error> {
         let verifier = self.verifier.lock().expect(
             "another thread panicked while holding a lock to a verifier",
         );
