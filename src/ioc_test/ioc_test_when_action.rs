@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::hash::Hash;
 
 use super::super::instrumenting_service::{WhenAction, WhenVerifier};
@@ -10,19 +10,16 @@ where
 {
     request: Option<A>,
     request_map: &'a mut HashMap<A, B>,
-    requests_to_verify: &'a mut HashSet<A>,
     verifiers: &'a mut Vec<WhenVerifier<A, B>>,
 }
 
 impl<'a, A, B> IocTestWhenAction<'a, A, B> {
     pub fn new(
         request_map: &'a mut HashMap<A, B>,
-        requests_to_verify: &'a mut HashSet<A>,
         verifiers: &'a mut Vec<WhenVerifier<A, B>>,
     ) -> Self {
         Self {
             request_map,
-            requests_to_verify,
             verifiers,
             request: None,
         }
@@ -51,9 +48,6 @@ where
         &mut self,
         verifier: WhenVerifier<Self::Request, Self::Response>,
     ) {
-        if let Some(ref request) = self.request {
-            self.requests_to_verify.insert(request.clone());
-            self.verifiers.push(verifier);
-        }
+        self.verifiers.push(verifier);
     }
 }

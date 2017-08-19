@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
@@ -9,6 +9,7 @@ use super::ioc_test::IocTest;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::{When, WhenVerifier};
+use super::super::instrumenting_service::verifiers::VerifyAll;
 use super::super::ioc::IocSpawn;
 use super::super::async_server::StartServer;
 use super::super::test::test::IntoTest;
@@ -20,7 +21,6 @@ where
     name: String,
     handle: Handle,
     request_map: HashMap<P::Request, P::Response>,
-    requests_to_verify: HashSet<P::Request>,
     verifiers: Vec<WhenVerifier<P::Request, P::Response>>,
     protocol: Arc<Mutex<P::Protocol>>,
     ip_address: SocketAddr,
@@ -46,7 +46,6 @@ where
             protocol: Arc::new(Mutex::new(protocol)),
             ip_address: SocketAddr::new("0.0.0.0".parse()?, ip_port),
             request_map: HashMap::new(),
-            requests_to_verify: HashSet::new(),
             verifiers: Vec::new(),
             ioc_command: String::from(ioc_command),
             ioc_variables_to_set: Vec::new(),
@@ -65,20 +64,10 @@ where
     where
         A: Into<P::Request>,
     {
-        let action = IocTestWhenAction::new(
-            &mut self.request_map,
-            &mut self.requests_to_verify,
-            &mut self.verifiers,
-        );
+        let action =
+            IocTestWhenAction::new(&mut self.request_map, &mut self.verifiers);
 
         When::with_action(request.into(), action)
-    }
-
-    pub fn verify<A>(&mut self, request: A)
-    where
-        A: Into<P::Request>,
-    {
-        self.requests_to_verify.insert(request.into());
     }
 
     pub fn set_variable(&mut self, name: &str, value: &str) {
@@ -105,7 +94,7 @@ where
 
         let service_factory = P::create_service_factory(
             self.request_map,
-            self.requests_to_verify,
+            VerifyAll::new(self.verifiers),
         );
 
         let server = StartServer::new(

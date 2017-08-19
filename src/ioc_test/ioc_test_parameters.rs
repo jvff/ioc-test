@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::io;
@@ -13,8 +13,8 @@ use super::errors::Error;
 use super::super::async_server;
 use super::super::async_server::FiniteService;
 use super::super::instrumenting_service::{InstrumentingService,
-                                          ServiceInstrumenter};
-use super::super::instrumenting_service::verifiers::{VerifyAll, VerifyRequest};
+                                          ServiceInstrumenter, WhenVerifier};
+use super::super::instrumenting_service::verifiers::VerifyAll;
 use super::super::mock_service;
 use super::super::mock_service::{MockService, MockServiceFactory};
 
@@ -46,7 +46,7 @@ pub trait IocTestParameters {
 
     fn create_service_factory(
         expected_requests: HashMap<Self::Request, Self::Response>,
-        requests_to_verify: HashSet<Self::Request>,
+        verifier: VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
     ) -> Self::ServiceFactory;
 }
 
@@ -72,27 +72,19 @@ where
     type ServiceError = mock_service::Error;
     type Service = InstrumentingService<
         MockService<P::Request, P::Response>,
-        VerifyAll<VerifyRequest<P::Request, P::Response>>,
+        VerifyAll<WhenVerifier<P::Request, P::Response>>,
     >;
     type ServiceFactory = ServiceInstrumenter<
         MockServiceFactory<P::Request, P::Response>,
-        VerifyAll<VerifyRequest<P::Request, P::Response>>,
+        VerifyAll<WhenVerifier<P::Request, P::Response>>,
     >;
 
     fn create_service_factory(
         expected_requests: HashMap<Self::Request, Self::Response>,
-        requests_to_verify: HashSet<Self::Request>,
+        verifier: VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
     ) -> Self::ServiceFactory {
         let mock_service_factory =
             MockServiceFactory::new(Arc::new(Mutex::new(expected_requests)));
-
-        let verifiers = requests_to_verify
-            .iter()
-            .cloned()
-            .map(VerifyRequest::new)
-            .collect();
-
-        let verifier = VerifyAll::new(verifiers);
 
         ServiceInstrumenter::new(mock_service_factory, verifier)
     }
