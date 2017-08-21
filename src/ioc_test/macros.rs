@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! tests {
     (
-        type Protocol = $protocol:ident;
+        type Protocol = $protocol:ty;
         $( $test:ident ($name:expr) $body:tt )*
     ) => {
         pub fn add_tests<S>(scheduler: &mut TestScheduler<S>)
