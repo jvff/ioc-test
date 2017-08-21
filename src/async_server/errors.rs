@@ -3,12 +3,13 @@ use std::net::AddrParseError;
 
 use futures::{Future, Poll, Stream};
 
-use super::super::{mock_service, scpi};
+use super::super::{mock_service, proxy_service, scpi};
 
 error_chain! {
     links {
+        MockServiceError(mock_service::Error, mock_service::ErrorKind);
+        ProxyServiceError(proxy_service::Error, proxy_service::ErrorKind);
         ScpiError(scpi::Error, scpi::ErrorKind);
-        ServiceError(mock_service::Error, mock_service::ErrorKind);
     }
 
     foreign_links {
