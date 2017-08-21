@@ -20,11 +20,8 @@ where
     I: Stream,
     O: Sink,
 {
-    pub fn new(source: I, sink: O) -> Self {
-        ProxyService {
-            source: Arc::new(Mutex::new(source)),
-            sink: Arc::new(Mutex::new(sink)),
-        }
+    pub fn new(source: Arc<Mutex<I>>, sink: Arc<Mutex<O>>) -> Self {
+        ProxyService { source, sink }
     }
 }
 
