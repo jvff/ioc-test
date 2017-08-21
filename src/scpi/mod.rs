@@ -3,6 +3,8 @@ mod requests;
 mod response;
 
 mod protocol;
+
+mod client_codec;
 mod server_codec;
 
 pub use self::errors::{Error, ErrorKind};
