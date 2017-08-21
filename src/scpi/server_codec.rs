@@ -7,9 +7,9 @@ use super::errors::{Error, Result};
 use super::requests::ScpiRequest;
 use super::response::ScpiResponse;
 
-pub struct ScpiCodec;
+pub struct ScpiServerCodec;
 
-impl Encoder for ScpiCodec {
+impl Encoder for ScpiServerCodec {
     type Item = ScpiResponse;
     type Error = Error;
 
@@ -24,7 +24,7 @@ impl Encoder for ScpiCodec {
     }
 }
 
-impl Decoder for ScpiCodec {
+impl Decoder for ScpiServerCodec {
     type Item = ScpiRequest;
     type Error = Error;
 
