@@ -16,9 +16,7 @@ use super::super::instrumenting_service::verifiers::VerifyAll;
 pub trait IocTestParameters {
     type Request: Clone + Display + Eq + Hash + 'static;
     type Response: Clone + Eq + 'static;
-    type ProtocolError: From<io::Error>
-        + Into<Error>
-        + Into<async_server::Error>;
+    type ProtocolError: From<io::Error> + Into<Error> + Into<async_server::Error>;
     type Protocol: ServerProto<
         TcpStream,
         Request = Self::Request,
@@ -38,6 +36,7 @@ pub trait IocTestParameters {
         Instance = Self::Service,
     >;
 
+    fn create_protocol(&self) -> Self::Protocol;
     fn create_service_factory(
         expected_requests: HashMap<Self::Request, Self::Response>,
         verifier: VerifyAll<WhenVerifier<Self::Request, Self::Response>>,

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
-use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
 use tokio_core::net::TcpStream;
@@ -19,12 +18,21 @@ pub struct MockTestParameters<P>
 where
     P: ServerProto<TcpStream>,
 {
-    _protocol: PhantomData<P>,
+    protocol: P,
+}
+
+impl<P> MockTestParameters<P>
+where
+    P: ServerProto<TcpStream>,
+{
+    pub fn new(protocol: P) -> Self {
+        Self { protocol }
+    }
 }
 
 impl<P> IocTestParameters for MockTestParameters<P>
 where
-    P: ServerProto<TcpStream>,
+    P: Clone + ServerProto<TcpStream>,
     P::Request: Clone + Display + Eq + Hash,
     P::Response: Clone + Eq,
     P::Error: Into<async_server::Error> + Into<Error>,
@@ -43,6 +51,10 @@ where
         MockServiceFactory<P::Request, P::Response>,
         VerifyAll<WhenVerifier<P::Request, P::Response>>,
     >;
+
+    fn create_protocol(&self) -> Self::Protocol {
+        self.protocol.clone()
+    }
 
     fn create_service_factory(
         expected_requests: HashMap<Self::Request, Self::Response>,
