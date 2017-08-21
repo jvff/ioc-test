@@ -23,8 +23,7 @@ pub trait IocTestParameters {
     type Response: Clone + Eq + 'static;
     type ProtocolError: From<io::Error>
         + Into<Error>
-        + Into<async_server::Error>
-        + Into<mock_service::Error>;
+        + Into<async_server::Error>;
     type Protocol: ServerProto<
         TcpStream,
         Request = Self::Request,
