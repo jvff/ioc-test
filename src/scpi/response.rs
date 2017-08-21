@@ -8,6 +8,16 @@ pub enum ScpiResponse {
 }
 
 impl ScpiResponse {
+    pub fn from(string: &str) -> Self {
+        if string.len() == 0 {
+            ScpiResponse::Empty
+        } else if let Ok(integer) = string.parse() {
+            ScpiResponse::Integer(integer)
+        } else {
+            ScpiResponse::Utf8String(String::from(string))
+        }
+    }
+
     pub fn encode(&self, buffer: &mut BytesMut) {
         match *self {
             ScpiResponse::Empty => {}
