@@ -14,6 +14,7 @@ use super::super::instrumenting_service::{InstrumentingService,
 use super::super::instrumenting_service::verifiers::VerifyAll;
 use super::super::mock_service::{MockService, MockServiceFactory};
 
+#[derive(Clone)]
 pub struct MockTestParameters<P>
 where
     P: ServerProto<TcpStream>,
