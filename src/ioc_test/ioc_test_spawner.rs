@@ -2,8 +2,9 @@ use std::ops::Range;
 
 use tokio_core::reactor::Handle;
 
-use super::ioc_test_parameters::{IocTestParameters, MockTestParameters};
+use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_setup::IocTestSetup;
+use super::mock_test_parameters::MockTestParameters;
 use super::super::scpi::ScpiProtocol;
 use super::super::scpi::ScpiRequest;
 use super::super::scpi::ScpiResponse;
