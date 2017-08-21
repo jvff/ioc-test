@@ -58,6 +58,7 @@ where
     }
 
     fn create_service_factory(
+        &self,
         expected_requests: HashMap<Self::Request, Self::Response>,
         verifier: VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
     ) -> Self::ServiceFactory {

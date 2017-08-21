@@ -38,6 +38,7 @@ pub trait IocTestParameters {
 
     fn create_protocol(&self) -> Self::Protocol;
     fn create_service_factory(
+        &self,
         expected_requests: HashMap<Self::Request, Self::Response>,
         verifier: VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
     ) -> Self::ServiceFactory;

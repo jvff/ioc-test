@@ -27,6 +27,7 @@ where
     ca_server_port: u16,
     ioc_command: String,
     ioc_variables_to_set: Vec<(String, String)>,
+    test_parameters: P,
 }
 
 impl<P> IocTestSetup<P>
@@ -35,14 +36,17 @@ where
 {
     pub fn new(
         handle: Handle,
-        protocol: P::Protocol,
         ioc_command: &str,
         ip_port: u16,
         ca_server_port: u16,
+        test_parameters: P,
     ) -> Result<Self> {
+        let protocol = test_parameters.create_protocol();
+
         Ok(Self {
             handle,
             ca_server_port,
+            test_parameters,
             protocol: Arc::new(Mutex::new(protocol)),
             ip_address: SocketAddr::new("0.0.0.0".parse()?, ip_port),
             request_map: HashMap::new(),
@@ -92,7 +96,7 @@ where
 
         let ioc = IocSpawn::new(handle, command, ip_port, ca_server_port);
 
-        let service_factory = P::create_service_factory(
+        let service_factory = self.test_parameters.create_service_factory(
             self.request_map,
             VerifyAll::new(self.verifiers),
         );
