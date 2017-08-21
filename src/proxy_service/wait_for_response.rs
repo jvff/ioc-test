@@ -3,6 +3,8 @@ use std::sync::{Arc, Mutex};
 
 use futures::{Async, Future, Poll, Stream};
 
+use super::errors::Error;
+
 pub struct WaitForResponse<I>
 where
     I: Stream,
@@ -22,10 +24,10 @@ where
 impl<I> Future for WaitForResponse<I>
 where
     I: Stream,
-    <I as Stream>::Error: From<io::Error>,
+    I::Error: Into<Error>,
 {
     type Item = I::Item;
-    type Error = I::Error;
+    type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let mut source = self.source
@@ -36,7 +38,7 @@ where
             Ok(Async::Ready(Some(response))) => Ok(Async::Ready(response)),
             Ok(Async::Ready(None)) => Err(unexpected_eof().into()),
             Ok(Async::NotReady) => Ok(Async::NotReady),
-            Err(error) => Err(error),
+            Err(error) => Err(error.into()),
         }
     }
 }

@@ -2,12 +2,13 @@ use std::sync::{Arc, Mutex};
 
 use futures::{Async, AsyncSink, Future, Poll, Sink, Stream};
 
+use super::errors::Error;
 use super::flush_request::FlushRequest;
 
 pub struct SendRequest<I, O>
 where
     I: Stream,
-    O: Sink<SinkError = I::Error>,
+    O: Sink,
 {
     request: Option<O::SinkItem>,
     source: Arc<Mutex<I>>,
@@ -17,7 +18,7 @@ where
 impl<I, O> SendRequest<I, O>
 where
     I: Stream,
-    O: Sink<SinkError = I::Error>,
+    O: Sink,
 {
     pub fn new(
         request: O::SinkItem,
@@ -35,10 +36,11 @@ where
 impl<I, O> Future for SendRequest<I, O>
 where
     I: Stream,
-    O: Sink<SinkError = I::Error>,
+    O: Sink,
+    O::SinkError: Into<Error>,
 {
     type Item = FlushRequest<I, O>;
-    type Error = I::Error;
+    type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let request = self.request
@@ -60,7 +62,7 @@ where
                 self.request = Some(item);
                 Ok(Async::NotReady)
             }
-            Err(error) => Err(error),
+            Err(error) => Err(error.into()),
         }
     }
 }

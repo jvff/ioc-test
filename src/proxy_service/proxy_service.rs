@@ -1,15 +1,15 @@
-use std::io;
 use std::sync::{Arc, Mutex};
 
 use futures::{Sink, Stream};
 use tokio_service::Service;
 
+use super::errors::Error;
 use super::proxy_request::ProxyRequest;
 
 pub struct ProxyService<I, O>
 where
     I: Stream,
-    O: Sink<SinkError = I::Error>,
+    O: Sink,
 {
     source: Arc<Mutex<I>>,
     sink: Arc<Mutex<O>>,
@@ -18,7 +18,7 @@ where
 impl<I, O> ProxyService<I, O>
 where
     I: Stream,
-    O: Sink<SinkError = I::Error>,
+    O: Sink,
 {
     pub fn new(source: I, sink: O) -> Self {
         ProxyService {
@@ -31,12 +31,13 @@ where
 impl<I, O> Service for ProxyService<I, O>
 where
     I: Stream,
-    O: Sink<SinkError = I::Error>,
-    <I as Stream>::Error: From<io::Error>,
+    O: Sink,
+    I::Error: Into<Error>,
+    O::SinkError: Into<Error>,
 {
     type Request = O::SinkItem;
     type Response = I::Item;
-    type Error = I::Error;
+    type Error = Error;
     type Future = ProxyRequest<I, O>;
 
     fn call(&self, request: Self::Request) -> Self::Future {
