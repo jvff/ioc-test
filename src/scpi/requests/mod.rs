@@ -6,6 +6,8 @@ mod source;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
+use bytes::BytesMut;
+
 use self::str_extensions::StrExtensions;
 use super::errors::{ErrorKind, Result};
 
@@ -45,6 +47,11 @@ impl ScpiRequest {
         } else {
             Err(ErrorKind::UnknownScpiRequest(String::from(string)).into())
         }
+    }
+
+    pub fn encode(&self, buffer: &mut BytesMut) {
+        buffer.extend(self.to_string().as_bytes());
+        buffer.extend("\n".as_bytes())
     }
 }
 
