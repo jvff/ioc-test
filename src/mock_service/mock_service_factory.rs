@@ -9,12 +9,6 @@ use tokio_service::NewService;
 use super::errors::Error;
 use super::mock_service::MockService;
 
-macro_rules! request_response_map {
-    ( $object:expr , $($request:expr => $response:expr),+ $(,)* ) => {
-        $($object.when($request).reply_with($response));+
-    }
-}
-
 pub struct MockServiceFactory<A, B> {
     expected_requests: Arc<Mutex<HashMap<A, B>>>,
 }
