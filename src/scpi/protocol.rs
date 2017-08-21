@@ -8,6 +8,7 @@ use super::requests::ScpiRequest;
 use super::response::ScpiResponse;
 use super::server_codec::ScpiServerCodec;
 
+#[derive(Clone)]
 pub struct ScpiProtocol;
 
 impl<T: AsyncRead + AsyncWrite + 'static> ServerProto<T> for ScpiProtocol {
