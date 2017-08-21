@@ -1,15 +1,33 @@
+use std::marker::PhantomData;
 use std::str;
 
 use bytes::BytesMut;
 use tokio_io::codec::{Decoder, Encoder};
 
 use super::errors::{Error, Result};
+use super::extension::ScpiExtension;
 use super::requests::ScpiRequest;
 use super::response::ScpiResponse;
 
-pub struct ScpiServerCodec;
+pub struct ScpiServerCodec<X: ScpiExtension> {
+    _extension: PhantomData<X>,
+}
 
-impl Encoder for ScpiServerCodec {
+impl<X> ScpiServerCodec<X>
+where
+    X: ScpiExtension,
+{
+    pub fn new() -> Self {
+        Self {
+            _extension: PhantomData,
+        }
+    }
+}
+
+impl<X> Encoder for ScpiServerCodec<X>
+where
+    X: ScpiExtension,
+{
     type Item = ScpiResponse;
     type Error = Error;
 
@@ -24,8 +42,11 @@ impl Encoder for ScpiServerCodec {
     }
 }
 
-impl Decoder for ScpiServerCodec {
-    type Item = ScpiRequest;
+impl<X> Decoder for ScpiServerCodec<X>
+where
+    X: ScpiExtension,
+{
+    type Item = ScpiRequest<X>;
     type Error = Error;
 
     fn decode(&mut self, buffer: &mut BytesMut) -> Result<Option<Self::Item>> {

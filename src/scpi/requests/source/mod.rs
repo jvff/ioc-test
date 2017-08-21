@@ -4,9 +4,13 @@ mod phase;
 mod voltage;
 
 use super::ScpiRequest;
+use super::super::extension::ScpiExtension;
 use super::str_extensions::StrExtensions;
 
-pub fn decode(string: &str) -> Option<ScpiRequest> {
+pub fn decode<X>(string: &str) -> Option<ScpiRequest<X>>
+where
+    X: ScpiExtension,
+{
     let request_data = string.skip_expected_chars("SOURce");
 
     if let Some((source, command)) = request_data.parse_integer() {
