@@ -56,13 +56,31 @@ where
             let message_bytes = buffer.split_to(message_end);
             let message = str::from_utf8(&message_bytes)?;
 
-            buffer.split_to(1);
+            remove_trailing_bytes(buffer);
 
             Ok(Some(ScpiRequest::from(message)?))
         } else {
             Ok(None)
         }
     }
+}
+
+fn remove_trailing_bytes(buffer: &mut BytesMut) {
+    let start_of_next_message = buffer.iter().position(is_not_terminator);
+
+    if let Some(next_message_byte) = start_of_next_message {
+        if next_message_byte > 0 {
+            buffer.split_to(next_message_byte);
+        }
+    } else {
+        let trailing_bytes = buffer.len();
+
+        buffer.split_to(trailing_bytes);
+    }
+}
+
+fn is_not_terminator(byte: &u8) -> bool {
+    !is_end_of_message(byte)
 }
 
 fn is_end_of_message(byte: &u8) -> bool {
