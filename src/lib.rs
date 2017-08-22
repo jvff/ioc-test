@@ -30,7 +30,7 @@ pub mod line;
 pub mod scpi;
 
 pub use self::ioc_test::{IocTestParameters, IocTestSetup, IocTestSpawner,
-                         MockTestParameters};
+                         MockTestParameters, ProxyTestParameters};
 pub use self::test::test_reporter::TestReporter;
 pub use self::test::test_scheduler::TestScheduler;
 pub use self::test::test_spawner::TestSpawner;
