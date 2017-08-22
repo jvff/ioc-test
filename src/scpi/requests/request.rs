@@ -14,6 +14,7 @@ pub enum ScpiRequest<X>
 where
     X: ScpiExtension,
 {
+    CalibrationQuery,
     OutputOn(usize),
     OutputOff(usize),
     OutputStatus(usize),
@@ -42,6 +43,7 @@ where
 {
     pub fn from(string: &str) -> Result<Self> {
         let decoded_request = match string.view_first_chars(4) {
+            "*CAL" if string == "*CAL?" => Some(ScpiRequest::CalibrationQuery),
             "OUTP" => output::decode(string),
             "SOUR" => source::decode(string),
             _ => None,
@@ -68,6 +70,7 @@ where
 {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         match *self {
+            ScpiRequest::CalibrationQuery => write!(formatter, "*CAL?"),
             ScpiRequest::OutputOn(channel) => {
                 write!(formatter, "OUTP{} ON", channel)
             }
