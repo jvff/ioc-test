@@ -7,7 +7,7 @@ use super::str_extensions::StrExtensions;
 use super::super::errors::{ErrorKind, Result};
 use super::super::extension::ScpiExtension;
 
-use super::{output, source};
+use super::source;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum ScpiRequest<X>
@@ -15,9 +15,6 @@ where
     X: ScpiExtension,
 {
     CalibrationQuery,
-    OutputOn(usize),
-    OutputOff(usize),
-    OutputStatus(usize),
     SourceFrequencyGet(usize),
     SourcePhaseGet(usize),
     SourceVoltageGet(usize),
@@ -44,7 +41,6 @@ where
     pub fn from(string: &str) -> Result<Self> {
         let decoded_request = match string.view_first_chars(4) {
             "*CAL" if string == "*CAL?" => Some(ScpiRequest::CalibrationQuery),
-            "OUTP" => output::decode(string),
             "SOUR" => source::decode(string),
             _ => None,
         };
@@ -71,15 +67,6 @@ where
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         match *self {
             ScpiRequest::CalibrationQuery => write!(formatter, "*CAL?"),
-            ScpiRequest::OutputOn(channel) => {
-                write!(formatter, "OUTP{} ON", channel)
-            }
-            ScpiRequest::OutputOff(channel) => {
-                write!(formatter, "OUTP{} OFF", channel)
-            }
-            ScpiRequest::OutputStatus(channel) => {
-                write!(formatter, "OUTP{}?", channel)
-            }
             ScpiRequest::SourceFrequencyGet(source) => {
                 write!(formatter, "SOUR{}:FREQ?", source)
             }
