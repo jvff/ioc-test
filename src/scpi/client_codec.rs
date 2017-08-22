@@ -54,6 +54,6 @@ where
         let message_bytes = buffer.split_to(message_length);
         let message = str::from_utf8(&message_bytes)?;
 
-        Ok(Some(ScpiResponse::from(message)))
+        Ok(Some(ScpiResponse::from(message.trim())))
     }
 }
