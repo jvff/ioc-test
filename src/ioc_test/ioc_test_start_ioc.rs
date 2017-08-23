@@ -44,7 +44,7 @@ where
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let ioc_process = try_ready!(self.ioc.poll());
         let ioc_process = IocProcess::new(ioc_process)?;
-        let mut ioc = IocInstance::new(ioc_process);
+        let mut ioc = IocInstance::new(ioc_process)?;
 
         for &(ref name, ref value) in self.ioc_variables_to_set.iter() {
             ioc.set_variable(name, value);

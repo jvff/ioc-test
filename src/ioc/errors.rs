@@ -12,12 +12,8 @@ error_chain! {
     }
 
     errors {
-        IocStdinAccessError {
-            description("failed to access child IOC process standard input")
-        }
-
-        IocStdoutAccessError {
-            description("failed to access child IOC process standard output")
+        IocShellAccessError {
+            description("failed to access child IOC process shell")
         }
 
         IocWriteError {

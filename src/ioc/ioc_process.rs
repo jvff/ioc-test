@@ -1,37 +1,29 @@
 use std::mem;
 use std::process::ExitStatus;
 
-use bytes::{Bytes, BytesMut, IntoBuf};
-use futures::{Async, AsyncSink, Future, Poll, Sink, StartSend, Stream};
-use tokio_io::{AsyncRead, AsyncWrite};
-use tokio_process::{Child, ChildStdin, ChildStdout};
+use futures::{Future, Poll};
+use tokio_process::Child;
 
 use super::errors::{Error, ErrorKind, Result};
+use super::ioc_shell_channel::IocShellChannel;
 
 #[derive(Debug)]
 pub struct IocProcess {
     process: Child,
-    input: ChildStdin,
-    output: ChildStdout,
-    input_buffer: BytesMut,
     error: Option<Error>,
 }
 
 impl IocProcess {
-    pub fn new(mut process: Child) -> Result<Self> {
-        let no_input_error: Error = ErrorKind::IocStdinAccessError.into();
-        let no_output_error: Error = ErrorKind::IocStdoutAccessError.into();
-
-        let input = process.stdin().take().ok_or(no_input_error)?;
-        let output = process.stdout().take().ok_or(no_output_error)?;
-
+    pub fn new(process: Child) -> Result<Self> {
         Ok(Self {
             process,
-            input,
-            output,
-            input_buffer: BytesMut::new(),
             error: None,
         })
+    }
+
+    pub fn shell(&mut self) -> Result<IocShellChannel> {
+        IocShellChannel::from(&mut self.process)
+            .ok_or(ErrorKind::IocShellAccessError.into())
     }
 
     pub fn kill(&mut self) {
@@ -65,55 +57,7 @@ impl Future for IocProcess {
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         self.check_error()?;
-        self.poll_complete()?;
 
         Ok(self.process.poll()?)
-    }
-}
-
-impl Sink for IocProcess {
-    type SinkItem = Bytes;
-    type SinkError = Error;
-
-    fn start_send(
-        &mut self,
-        item: Self::SinkItem,
-    ) -> StartSend<Self::SinkItem, Self::SinkError> {
-        self.check_error()?;
-
-        self.input_buffer.extend(item);
-
-        Ok(AsyncSink::Ready)
-    }
-
-    fn poll_complete(&mut self) -> Poll<(), Self::SinkError> {
-        self.check_error()?;
-
-        if !self.input_buffer.is_empty() {
-            let bytes_written = {
-                let ref buffer = self.input_buffer;
-                let mut buffer = buffer.into_buf();
-
-                try_ready!(self.input.write_buf(&mut buffer))
-            };
-
-            self.input_buffer.split_to(bytes_written);
-        }
-
-        Ok(Async::Ready(()))
-    }
-}
-
-impl Stream for IocProcess {
-    type Item = Bytes;
-    type Error = Error;
-
-    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
-        self.check_error()?;
-
-        let mut buffer = BytesMut::with_capacity(64);
-        let _bytes_read = try_ready!(self.output.read_buf(&mut buffer));
-
-        Ok(Async::Ready(Some(buffer.freeze())))
     }
 }
