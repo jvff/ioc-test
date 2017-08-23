@@ -3,6 +3,7 @@ mod errors;
 mod ioc_spawn;
 mod ioc_process;
 mod ioc_instance;
+mod ioc_shell_channel;
 mod ioc_shell_codec;
 mod ioc_shell_command;
 mod ioc_variable_command;
