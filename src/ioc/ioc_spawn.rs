@@ -37,7 +37,7 @@ impl Future for IocSpawn {
             .env("IPADDR", "127.0.0.1")
             .env("IPPORT", self.ip_port.to_string())
             .env("EPICS_CA_SERVER_PORT", self.ca_server_port.to_string())
-            .stdout(Stdio::null())
+            .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .stdin(Stdio::piped())
             .spawn_async(&self.handle)?;

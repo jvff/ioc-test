@@ -10,6 +10,10 @@ error_chain! {
             description("failed to access child IOC process standard input")
         }
 
+        IocStdoutAccessError {
+            description("failed to access child IOC process standard output")
+        }
+
         IocWriteError {
             description("failed to write to child IOC process standard input")
         }

@@ -2,9 +2,9 @@ use std::mem;
 use std::process::ExitStatus;
 
 use bytes::{Bytes, BytesMut, IntoBuf};
-use futures::{Async, AsyncSink, Future, Poll, Sink, StartSend};
-use tokio_io::AsyncWrite;
-use tokio_process::{Child, ChildStdin};
+use futures::{Async, AsyncSink, Future, Poll, Sink, StartSend, Stream};
+use tokio_io::{AsyncRead, AsyncWrite};
+use tokio_process::{Child, ChildStdin, ChildStdout};
 
 use super::errors::{Error, ErrorKind, Result};
 
@@ -12,6 +12,7 @@ use super::errors::{Error, ErrorKind, Result};
 pub struct IocProcess {
     process: Child,
     input: ChildStdin,
+    output: ChildStdout,
     input_buffer: BytesMut,
     error: Option<Error>,
 }
@@ -19,11 +20,15 @@ pub struct IocProcess {
 impl IocProcess {
     pub fn new(mut process: Child) -> Result<Self> {
         let no_input_error: Error = ErrorKind::IocStdinAccessError.into();
+        let no_output_error: Error = ErrorKind::IocStdoutAccessError.into();
+
         let input = process.stdin().take().ok_or(no_input_error)?;
+        let output = process.stdout().take().ok_or(no_output_error)?;
 
         Ok(Self {
             process,
             input,
+            output,
             input_buffer: BytesMut::new(),
             error: None,
         })
@@ -96,5 +101,19 @@ impl Sink for IocProcess {
         }
 
         Ok(Async::Ready(()))
+    }
+}
+
+impl Stream for IocProcess {
+    type Item = Bytes;
+    type Error = Error;
+
+    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
+        self.check_error()?;
+
+        let mut buffer = BytesMut::with_capacity(64);
+        let _bytes_read = try_ready!(self.output.read_buf(&mut buffer));
+
+        Ok(Async::Ready(Some(buffer.freeze())))
     }
 }
