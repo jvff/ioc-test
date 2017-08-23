@@ -1,8 +1,14 @@
 use std::io;
 
+use super::ioc_shell_codec;
+
 error_chain! {
     foreign_links {
         Io(io::Error);
+    }
+
+    links {
+        IocShellCodec(ioc_shell_codec::Error, ioc_shell_codec::ErrorKind);
     }
 
     errors {
