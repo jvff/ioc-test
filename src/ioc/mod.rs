@@ -1,3 +1,4 @@
+mod channel;
 mod errors;
 mod ioc_spawn;
 mod ioc_process;
