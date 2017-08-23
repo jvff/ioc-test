@@ -11,7 +11,7 @@ error_chain! {
         }
 
         IocWriteError {
-            description("failed to write to child IOC process standard output")
+            description("failed to write to child IOC process standard input")
         }
 
         SettingIocVariable {
