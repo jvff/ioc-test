@@ -9,6 +9,7 @@ mod ioc_test_setup;
 mod ioc_test_spawner;
 mod ioc_test_start;
 mod ioc_test_start_ioc;
+mod ioc_test_variable_action;
 mod ioc_test_when_action;
 mod mock_test_parameters;
 mod proxy_test_parameters;
