@@ -1,5 +1,6 @@
 use super::ioc_variable_command::IocVariableCommand;
 
+#[derive(Eq, PartialEq)]
 pub enum IocShellCommand {
     DbGetField(String),
     DbPutField(String, String),
