@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use super::error_status::ErrorStatus;
-use super::super::errors::Error;
+use super::errors::Error;
 use super::super::ioc_test_variable_action::IocTestVariableAction;
 use super::super::super::instrumenting_service::verifiers::Verifier;
 use super::super::super::ioc::IocShellCommand;

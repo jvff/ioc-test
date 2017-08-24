@@ -1,4 +1,4 @@
-use super::super::errors::{Error, ErrorKind};
+use super::errors::{Error, ErrorKind};
 use super::super::super::ioc::IocShellCommand;
 
 #[derive(Clone)]
