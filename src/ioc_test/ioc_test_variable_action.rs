@@ -16,4 +16,13 @@ impl IocTestVariableAction {
             }
         }
     }
+
+    pub fn expected_output(&self) -> String {
+        let value = match *self {
+            IocTestVariableAction::Set(_, ref value) => value,
+            IocTestVariableAction::Check(_, ref value) => value,
+        };
+
+        format!("DBR_STRING:          \"{}\"", value)
+    }
 }
