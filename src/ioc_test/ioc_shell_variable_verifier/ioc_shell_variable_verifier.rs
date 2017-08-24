@@ -1,45 +1,10 @@
 use std::collections::VecDeque;
 
-use super::super::errors::{Error, ErrorKind};
+use super::error_status::ErrorStatus;
+use super::super::errors::Error;
 use super::super::ioc_test_variable_action::IocTestVariableAction;
 use super::super::super::instrumenting_service::verifiers::Verifier;
 use super::super::super::ioc::IocShellCommand;
-
-#[derive(Clone)]
-enum ErrorStatus {
-    UnexpectedCommand(IocShellCommand),
-    IncorrectCommand {
-        received: IocShellCommand,
-        expected: IocShellCommand,
-    },
-    UnexpectedOutput(String),
-    IncorrectOutput { received: String, expected: String },
-}
-
-impl Into<Error> for ErrorStatus {
-    fn into(self) -> Error {
-        match self {
-            ErrorStatus::UnexpectedCommand(command) => {
-                ErrorKind::UnexpectedIocShellCommand(command.clone()).into()
-            }
-            ErrorStatus::IncorrectCommand { received, expected } => {
-                ErrorKind::IncorrectIocShellCommand(
-                    received.clone(),
-                    expected.clone(),
-                ).into()
-            }
-            ErrorStatus::UnexpectedOutput(output) => {
-                ErrorKind::UnexpectedIocShellOutput(output).into()
-            }
-            ErrorStatus::IncorrectOutput { received, expected } => {
-                ErrorKind::IncorrectIocShellOutput(
-                    received.clone(),
-                    expected.clone(),
-                ).into()
-            }
-        }
-    }
-}
 
 pub struct IocShellVariableVerifier {
     requests: VecDeque<IocShellCommand>,
