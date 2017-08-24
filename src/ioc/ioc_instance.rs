@@ -1,43 +1,29 @@
 use std::mem;
 use std::process::ExitStatus;
 
-use futures::{AsyncSink, Future, Poll, Sink};
+use futures::{Future, Poll};
 
 use super::errors::{Error, ErrorKind, Result};
 use super::ioc_process::IocProcess;
-use super::ioc_shell_channel::IocShellChannel;
-use super::ioc_variable_command::IocVariableCommand;
+use super::ioc_shell_service::IocShellService;
 
 pub struct IocInstance {
     process: IocProcess,
-    shell: IocShellChannel,
     error: Option<Error>,
 }
 
 impl IocInstance {
-    pub fn new(mut process: IocProcess) -> Result<Self> {
-        let shell = process.shell()?;
-
+    pub fn new(process: IocProcess) -> Result<Self> {
         Ok(Self {
             process,
-            shell,
             error: None,
         })
     }
 
-    pub fn set_variable(&mut self, name: &str, value: &str) {
-        if self.error.is_none() {
-            let name = String::from(name);
-            let value = String::from(value);
-            let command = IocVariableCommand::Set(name, value);
-            let write_error = ErrorKind::IocWriteError.into();
+    pub fn shell(&mut self) -> Result<IocShellService> {
+        let shell_channel = self.process.shell()?;
 
-            self.error = match self.shell.start_send(command.into()) {
-                Ok(AsyncSink::Ready) => None,
-                Ok(AsyncSink::NotReady(_)) => Some(write_error),
-                Err(error) => error.into(),
-            }
-        }
+        Ok(IocShellService::new(shell_channel))
     }
 
     pub fn kill(&mut self) {
@@ -54,8 +40,6 @@ impl Future for IocInstance {
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let temporary_error = ErrorKind::IocInstancePolledAfterEnd.into();
         let error_status = mem::replace(&mut self.error, Some(temporary_error));
-
-        self.shell.poll_complete()?;
 
         let (poll_result, new_error_status) = match error_status {
             None => (self.process.poll(), None),

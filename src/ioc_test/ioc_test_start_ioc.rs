@@ -14,7 +14,7 @@ where
 {
     ioc: IocSpawn,
     listening_server: Option<ListeningServer<P::Protocol, P::Service>>,
-    ioc_variables_to_set: Vec<(String, String)>,
+    ioc_variables_to_set: Option<Vec<(String, String)>>,
 }
 
 impl<P> IocTestStartIoc<P>
@@ -28,7 +28,7 @@ where
     ) -> Self {
         Self {
             ioc,
-            ioc_variables_to_set,
+            ioc_variables_to_set: Some(ioc_variables_to_set),
             listening_server: Some(listening_server),
         }
     }
@@ -43,18 +43,19 @@ where
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let ioc_process = try_ready!(self.ioc.poll());
-        let ioc_process = IocProcess::new(ioc_process)?;
-        let mut ioc = IocInstance::new(ioc_process)?;
-
-        for &(ref name, ref value) in self.ioc_variables_to_set.iter() {
-            ioc.set_variable(name, value);
-        }
+        let ioc = IocInstance::new(IocProcess::new(ioc_process)?)?;
 
         let listening_server = self.listening_server
             .take()
             .expect("IocTestStartIoc polled after it finished");
         let server = listening_server.flatten();
 
-        Ok(Async::Ready(IocTestExecution::new(ioc, server)))
+        let ioc_variables_to_set = self.ioc_variables_to_set
+            .take()
+            .expect("IocTestStartIoc polled after it finished");
+
+        Ok(Async::Ready(
+            IocTestExecution::new(ioc, server, ioc_variables_to_set)?,
+        ))
     }
 }

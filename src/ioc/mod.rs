@@ -14,4 +14,7 @@ mod ioc_variable_command;
 pub use self::errors::{Error, ErrorKind};
 pub use self::ioc_instance::IocInstance;
 pub use self::ioc_process::IocProcess;
+pub use self::ioc_shell_command::IocShellCommand;
+pub use self::ioc_shell_command_output::IocShellCommandOutput;
+pub use self::ioc_shell_service::IocShellService;
 pub use self::ioc_spawn::IocSpawn;
