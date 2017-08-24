@@ -11,16 +11,27 @@ use super::ioc_shell_command::IocShellCommand;
 use super::ioc_shell_command_output::IocShellCommandOutput;
 
 pub struct IocShellServiceScheduler {
+    this: Option<Arc<Mutex<IocShellServiceScheduler>>>,
     ioc_shell: IocShellChannel,
     output_queue: VecDeque<Rc<Cell<Option<String>>>>,
 }
 
 impl IocShellServiceScheduler {
-    pub fn new(ioc_shell: IocShellChannel) -> Self {
-        Self {
+    pub fn new(ioc_shell: IocShellChannel) -> Arc<Mutex<Self>> {
+        let scheduler = IocShellServiceScheduler {
+            this: None,
             ioc_shell,
             output_queue: VecDeque::new(),
+        };
+
+        let scheduler_reference = Arc::new(Mutex::new(scheduler));
+        let this = scheduler_reference.clone();
+
+        if let Ok(mut scheduler) = scheduler_reference.lock() {
+            scheduler.this = Some(this);
         }
+
+        scheduler_reference
     }
 
     pub fn poll(&mut self) -> Poll<(), Error> {
@@ -47,9 +58,9 @@ impl IocShellServiceScheduler {
     pub fn request(
         &mut self,
         request: IocShellCommand,
-        scheduler: Arc<Mutex<IocShellServiceScheduler>>,
     ) -> IocShellCommandOutput {
         let send_result = self.ioc_shell.start_send(request);
+        let scheduler = self.this.clone();
         let output_cell = Rc::new(Cell::new(None));
 
         self.output_queue.push_back(output_cell.clone());

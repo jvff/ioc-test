@@ -15,9 +15,7 @@ pub struct IocShellService {
 impl IocShellService {
     pub fn new(ioc_shell: IocShellChannel) -> Self {
         Self {
-            scheduler: Arc::new(
-                Mutex::new(IocShellServiceScheduler::new(ioc_shell)),
-            ),
+            scheduler: IocShellServiceScheduler::new(ioc_shell),
         }
     }
 }
@@ -29,12 +27,10 @@ impl Service for IocShellService {
     type Future = IocShellCommandOutput;
 
     fn call(&self, request: Self::Request) -> Self::Future {
-        let scheduler_handle = self.scheduler.clone();
-
         if let Ok(mut scheduler) = self.scheduler.lock() {
-            scheduler.request(request, scheduler_handle)
+            scheduler.request(request)
         } else {
-            IocShellCommandOutput::with_scheduler_lock_error(scheduler_handle)
+            IocShellCommandOutput::with_scheduler_lock_error()
         }
     }
 }

@@ -10,13 +10,13 @@ use super::ioc_shell_service_scheduler::IocShellServiceScheduler;
 pub struct IocShellCommandOutput {
     error: Option<Error>,
     output: Rc<Cell<Option<String>>>,
-    scheduler: Arc<Mutex<IocShellServiceScheduler>>,
+    scheduler: Option<Arc<Mutex<IocShellServiceScheduler>>>,
 }
 
 impl IocShellCommandOutput {
     pub fn new<T, E>(
         send_result: StartSend<T, E>,
-        scheduler: Arc<Mutex<IocShellServiceScheduler>>,
+        scheduler: Option<Arc<Mutex<IocShellServiceScheduler>>>,
         output: Rc<Cell<Option<String>>>,
     ) -> Self
     where
@@ -37,11 +37,9 @@ impl IocShellCommandOutput {
         }
     }
 
-    pub fn with_scheduler_lock_error(
-        scheduler: Arc<Mutex<IocShellServiceScheduler>>,
-    ) -> Self {
+    pub fn with_scheduler_lock_error() -> Self {
         Self {
-            scheduler,
+            scheduler: None,
             output: Rc::new(Cell::new(None)),
             error: Some(ErrorKind::IocShellServiceLockError.into()),
         }
@@ -59,23 +57,25 @@ impl IocShellCommandOutput {
     }
 
     fn poll_scheduler(&mut self) -> Poll<String, Error> {
-        if let Ok(mut scheduler) = self.scheduler.lock() {
-            let poll_result = scheduler.poll();
+        if let Some(ref scheduler) = self.scheduler {
+            if let Ok(mut scheduler) = scheduler.lock() {
+                let poll_result = scheduler.poll();
 
-            if let Some(output) = self.output.take().take() {
-                Ok(Async::Ready(output))
-            } else {
-                match poll_result {
-                    Ok(Async::Ready(_)) => Err(
-                        ErrorKind::IocShellReadError.into(),
-                    ),
-                    Ok(Async::NotReady) => Ok(Async::NotReady),
-                    Err(error) => Err(error.into()),
+                if let Some(output) = self.output.take().take() {
+                    return Ok(Async::Ready(output));
+                } else {
+                    return match poll_result {
+                        Ok(Async::Ready(_)) => Err(
+                            ErrorKind::IocShellReadError.into(),
+                        ),
+                        Ok(Async::NotReady) => Ok(Async::NotReady),
+                        Err(error) => Err(error.into()),
+                    };
                 }
             }
-        } else {
-            Err(ErrorKind::IocShellServiceLockError.into())
         }
+
+        Err(ErrorKind::IocShellServiceLockError.into())
     }
 }
 
