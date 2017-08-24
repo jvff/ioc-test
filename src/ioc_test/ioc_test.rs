@@ -4,6 +4,7 @@ use futures::future::Flatten;
 use super::errors::Error;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_start::IocTestStart;
+use super::ioc_test_variable_action::IocTestVariableAction;
 use super::super::async_server::StartServer;
 use super::super::ioc::IocSpawn;
 use super::super::test::test::Test;
@@ -24,9 +25,9 @@ where
         name: String,
         ioc: IocSpawn,
         server: StartServer<P::Protocol, P::ServiceFactory>,
-        ioc_variables_to_set: Vec<(String, String)>,
+        variable_actions: Vec<IocTestVariableAction>,
     ) -> Self {
-        let test_start = IocTestStart::new(ioc, server, ioc_variables_to_set);
+        let test_start = IocTestStart::new(ioc, server, variable_actions);
 
         Self {
             name,

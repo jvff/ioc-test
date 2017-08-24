@@ -5,7 +5,8 @@ use tokio_service::Service;
 
 use super::errors::{Error, Result};
 use super::ioc_test_parameters::IocTestParameters;
-use super::super::ioc::{IocInstance, IocShellCommand, IocShellCommandOutput};
+use super::ioc_test_variable_action::IocTestVariableAction;
+use super::super::ioc::{IocInstance, IocShellCommandOutput};
 use super::super::async_server;
 use super::super::async_server::ListeningServer;
 
@@ -26,13 +27,15 @@ where
     pub fn new(
         mut ioc: IocInstance,
         server: Flatten<ListeningServer<P::Protocol, P::Service>>,
-        ioc_variables_to_set: Vec<(String, String)>,
+        variable_actions: Vec<IocTestVariableAction>,
     ) -> Result<Self> {
         let ioc_service = ioc.shell()?;
-        let command_futures =
-            ioc_variables_to_set.into_iter().map(|(name, value)| {
-                ioc_service.call(IocShellCommand::DbPutField(name, value))
-            }).collect();
+        let command_futures = variable_actions
+            .into_iter()
+            .map(|variable_action| {
+                ioc_service.call(variable_action.ioc_shell_command())
+            })
+            .collect();
         let commands = future::join_all(command_futures);
 
         Ok(Self {

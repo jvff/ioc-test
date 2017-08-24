@@ -7,6 +7,7 @@ use tokio_core::reactor::Handle;
 use super::errors::Result;
 use super::ioc_test::IocTest;
 use super::ioc_test_parameters::IocTestParameters;
+use super::ioc_test_variable_action::IocTestVariableAction;
 use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::{When, WhenVerifier};
 use super::super::instrumenting_service::verifiers::VerifyAll;
@@ -26,7 +27,7 @@ where
     ip_address: SocketAddr,
     ca_server_port: u16,
     ioc_command: String,
-    ioc_variables_to_set: Vec<(String, String)>,
+    variable_actions: Vec<IocTestVariableAction>,
     test_parameters: P,
 }
 
@@ -52,7 +53,7 @@ where
             request_map: HashMap::new(),
             verifiers: Vec::new(),
             ioc_command: String::from(ioc_command),
-            ioc_variables_to_set: Vec::new(),
+            variable_actions: Vec::new(),
             name: String::from("Unnamed IOC test"),
         })
     }
@@ -78,7 +79,8 @@ where
         let name = String::from(name);
         let value = String::from(value);
 
-        self.ioc_variables_to_set.push((name, value));
+        self.variable_actions
+            .push(IocTestVariableAction::Set(name, value));
     }
 }
 
@@ -108,6 +110,6 @@ where
             self.handle,
         );
 
-        IocTest::new(self.name, ioc, server, self.ioc_variables_to_set)
+        IocTest::new(self.name, ioc, server, self.variable_actions)
     }
 }
