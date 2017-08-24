@@ -6,6 +6,8 @@ mod ioc_instance;
 mod ioc_shell_channel;
 mod ioc_shell_codec;
 mod ioc_shell_command;
+mod ioc_shell_command_output;
+mod ioc_shell_service_scheduler;
 mod ioc_variable_command;
 
 pub use self::errors::{Error, ErrorKind};
