@@ -2,6 +2,7 @@
 pub mod macros;
 
 mod errors;
+mod ioc_shell_variable_verifier;
 mod ioc_test;
 mod ioc_test_execution;
 mod ioc_test_parameters;
