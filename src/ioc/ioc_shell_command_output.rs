@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 
 use futures::{Async, AsyncSink, Future, Poll, StartSend};
 
-use super::errors::{Error, ErrorKind};
+use super::errors::{Error, ErrorKind, Result};
 use super::ioc_shell_service_scheduler::IocShellServiceScheduler;
 
 pub struct IocShellCommandOutput {
@@ -46,21 +46,20 @@ impl IocShellCommandOutput {
             error: Some(ErrorKind::IocShellServiceLockError.into()),
         }
     }
-}
 
-impl Future for IocShellCommandOutput {
-    type Item = String;
-    type Error = Error;
-
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+    fn check_error(&mut self) -> Result<()> {
         if let Some(error) = self.error.take() {
             self.error =
                 Some(ErrorKind::IocShellCommandOutputPolledAfterError.into());
 
             Err(error)
-        } else if let Some(output) = self.output.take().take() {
-            Ok(Async::Ready(output))
-        } else if let Ok(mut scheduler) = self.scheduler.lock() {
+        } else {
+            Ok(())
+        }
+    }
+
+    fn poll_scheduler(&mut self) -> Poll<String, Error> {
+        if let Ok(mut scheduler) = self.scheduler.lock() {
             let poll_result = scheduler.poll();
 
             if let Some(output) = self.output.take().take() {
@@ -76,6 +75,21 @@ impl Future for IocShellCommandOutput {
             }
         } else {
             Err(ErrorKind::IocShellServiceLockError.into())
+        }
+    }
+}
+
+impl Future for IocShellCommandOutput {
+    type Item = String;
+    type Error = Error;
+
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        self.check_error()?;
+
+        if let Some(output) = self.output.take().take() {
+            Ok(Async::Ready(output))
+        } else {
+            self.poll_scheduler()
         }
     }
 }
