@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use futures::future;
 use futures::{Async, Future, Poll};
 use futures::future::{Flatten, JoinAll};
@@ -81,7 +83,7 @@ where
     }
 
     fn kill_ioc(&mut self) -> Poll<(), Error> {
-        self.ioc.kill();
+        self.ioc.kill_after(Duration::from_secs(5));
 
         self.poll_ioc()
     }
