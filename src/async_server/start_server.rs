@@ -37,6 +37,7 @@ where
     S::Instance: FiniteService,
     S::Request: Clone + Display + Eq + Hash,
     S::Response: Clone,
+    S::Error: Into<Error>,
     P: ServerProto<
         TcpStream,
         Request = <S as NewService>::Request,
@@ -55,6 +56,23 @@ where
             protocol,
             handle,
             service_factory: Some(service_factory),
+        }
+    }
+
+    pub fn shutdown(&mut self) -> Poll<(), Error> {
+        if let Some(service_factory) = self.service_factory.take() {
+            let mut service = service_factory.new_service()?;
+
+            match service.force_stop() {
+                Ok(()) => Ok(Async::Ready(())),
+                Err(error) => Err(error.into()),
+            }
+        } else {
+            Err(
+                ErrorKind::IncorrectShutDownAttempt(
+                    String::from("StartServer"),
+                ).into(),
+            )
         }
     }
 
@@ -78,6 +96,7 @@ where
     S::Instance: FiniteService,
     S::Request: Clone + Display + Eq + Hash,
     S::Response: Clone,
+    S::Error: Into<Error>,
     P: ServerProto<
         TcpStream,
         Request = <S as NewService>::Request,

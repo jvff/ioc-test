@@ -40,6 +40,7 @@ where
     S::Request: 'static + Clone + Display + Eq + Hash,
     S::Response: 'static + Clone,
     S::Instance: FiniteService,
+    S::Error: Into<Error>,
     P: ServerProto<
         TcpStream,
         Request = <S as NewService>::Request,
