@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use super::extension::ScpiExtension;
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct NoScpiExtension;
 
 impl ScpiExtension for NoScpiExtension {
