@@ -59,6 +59,60 @@ where
     }
 }
 
+impl<P, S> From<StartServer<P, S>> for AsyncServer<P, S>
+where
+    S: NewService,
+    S::Request: 'static + Clone + Display + Eq + Hash,
+    S::Response: 'static + Clone,
+    S::Instance: FiniteService,
+    P: ServerProto<
+        TcpStream,
+        Request = <S as NewService>::Request,
+        Response = <S as NewService>::Response,
+    >,
+    P::Error: Into<Error>,
+{
+    fn from(start_server: StartServer<P, S>) -> Self {
+        AsyncServer::Binding(start_server)
+    }
+}
+
+impl<P, S> From<ListeningServer<P, S::Instance>> for AsyncServer<P, S>
+where
+    S: NewService,
+    S::Request: 'static + Clone + Display + Eq + Hash,
+    S::Response: 'static + Clone,
+    S::Instance: FiniteService,
+    P: ServerProto<
+        TcpStream,
+        Request = <S as NewService>::Request,
+        Response = <S as NewService>::Response,
+    >,
+    P::Error: Into<Error>,
+{
+    fn from(listening_server: ListeningServer<P, S::Instance>) -> Self {
+        AsyncServer::Listening(listening_server)
+    }
+}
+
+impl<P, S> From<ActiveServer<P::Transport, S::Instance>> for AsyncServer<P, S>
+where
+    S: NewService,
+    S::Request: 'static + Clone + Display + Eq + Hash,
+    S::Response: 'static + Clone,
+    S::Instance: FiniteService,
+    P: ServerProto<
+        TcpStream,
+        Request = <S as NewService>::Request,
+        Response = <S as NewService>::Response,
+    >,
+    P::Error: Into<Error>,
+{
+    fn from(active_server: ActiveServer<P::Transport, S::Instance>) -> Self {
+        AsyncServer::Active(active_server)
+    }
+}
+
 impl<P, S> Future for AsyncServer<P, S>
 where
     S: NewService,
