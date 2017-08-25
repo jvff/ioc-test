@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use super::verifiers;
 use super::verifiers::{Verifier, VerifierFactory, VerifyRequest,
                        VerifyRequestResponse};
@@ -21,8 +23,8 @@ impl<A, B> WhenVerifier<A, B> {
 
 impl<A, B> Verifier for WhenVerifier<A, B>
 where
-    A: Eq,
-    B: Eq,
+    A: Debug + Eq,
+    B: Debug + Eq,
 {
     type Request = A;
     type Response = B;
@@ -58,12 +60,21 @@ where
             }
         }
     }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        match *self {
+            WhenVerifier::Request(ref mut verifier) => verifier.force_stop(),
+            WhenVerifier::RequestResponse(ref mut verifier) => {
+                verifier.force_stop()
+            }
+        }
+    }
 }
 
 impl<A, B> VerifierFactory for WhenVerifier<A, B>
 where
-    A: Clone + Eq,
-    B: Clone + Eq,
+    A: Clone + Debug + Eq,
+    B: Clone + Debug + Eq,
 {
     type Verifier = WhenVerifier<A, B>;
 

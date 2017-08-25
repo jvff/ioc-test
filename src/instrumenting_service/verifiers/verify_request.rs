@@ -1,6 +1,7 @@
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
-use super::errors::Error;
+use super::errors::{Error, ErrorKind};
 use super::verifier::Verifier;
 use super::verifier_factory::VerifierFactory;
 
@@ -23,7 +24,7 @@ impl<A, B> VerifyRequest<A, B> {
 
 impl<A, B> Verifier for VerifyRequest<A, B>
 where
-    A: Eq,
+    A: Debug + Eq,
 {
     type Request = A;
     type Response = B;
@@ -40,11 +41,21 @@ where
     fn has_finished(&self) -> Result<bool, Self::Error> {
         Ok(self.verified)
     }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        if self.verified {
+            Ok(())
+        } else {
+            let request = format!("{:?}", self.request);
+
+            Err(ErrorKind::RequestWasntVerified(request).into())
+        }
+    }
 }
 
 impl<A, B> VerifierFactory for VerifyRequest<A, B>
 where
-    A: Clone + Eq,
+    A: Clone + Debug + Eq,
 {
     type Verifier = Self;
 

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::{Arc, Mutex};
 
@@ -52,8 +52,8 @@ where
         Response = <P as ServerProto<TcpStream>>::Response,
         Error = <P as ServerProto<TcpStream>>::Error,
     >,
-    <P as ServerProto<TcpStream>>::Request: Clone + Display + Eq + Hash,
-    <P as ServerProto<TcpStream>>::Response: Clone + Eq,
+    <P as ServerProto<TcpStream>>::Request: Clone + Debug + Display + Eq + Hash,
+    <P as ServerProto<TcpStream>>::Response: Clone + Debug + Eq,
     <P as ServerProto<TcpStream>>::Error: Into<async_server::Error> + Into<Error>,
     proxy_service::Error: From<<P as ServerProto<TcpStream>>::Error>,
 {

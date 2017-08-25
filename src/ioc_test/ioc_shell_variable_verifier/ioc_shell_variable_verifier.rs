@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use super::error_status::ErrorStatus;
-use super::errors::Error;
+use super::errors::{Error, ErrorKind};
 use super::super::ioc_test_variable_action::IocTestVariableAction;
 use super::super::super::instrumenting_service::verifiers::Verifier;
 use super::super::super::ioc::IocShellCommand;
@@ -75,6 +75,45 @@ impl Verifier for IocShellVariableVerifier {
             Err(error.clone().into())
         } else {
             Ok(self.requests.is_empty() && self.responses.is_empty())
+        }
+    }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        if let Some(ref error) = self.error {
+            Err(error.clone().into())
+        } else if !self.requests.is_empty() || !self.responses.is_empty() {
+            let unverified_outputs = self.responses.len();
+
+            if let Some(first_command) = self.requests.pop_front() {
+                let first_command = format!("{:?}", first_command);
+                let unverified_commands = self.requests.len() + 1;
+                let unverified_outputs_of_verified_commands =
+                    unverified_outputs as isize - unverified_commands as isize;
+
+                if unverified_outputs_of_verified_commands <= 0 {
+                    Err(
+                        ErrorKind::UnverifiedIocShellCommands(
+                            first_command,
+                            unverified_commands,
+                        ).into(),
+                    )
+                } else {
+                    Err(
+                        ErrorKind::UnverifiedIocShellCommandsAndOutputs(
+                            first_command,
+                            unverified_commands,
+                            unverified_outputs_of_verified_commands as usize,
+                        ).into(),
+                    )
+                }
+            } else {
+                Err(
+                    ErrorKind::UnverifiedIocShellOutputs(unverified_outputs)
+                        .into(),
+                )
+            }
+        } else {
+            Ok(())
         }
     }
 }

@@ -1,4 +1,6 @@
-use super::errors::Error;
+use std::fmt::Debug;
+
+use super::errors::{Error, ErrorKind};
 use super::verifier::Verifier;
 use super::verifier_factory::VerifierFactory;
 
@@ -28,8 +30,8 @@ impl<A, B> VerifyRequestResponse<A, B> {
 
 impl<A, B> Verifier for VerifyRequestResponse<A, B>
 where
-    A: Eq,
-    B: Eq,
+    A: Debug + Eq,
+    B: Debug + Eq,
 {
     type Request = A;
     type Response = B;
@@ -56,12 +58,33 @@ where
     fn has_finished(&self) -> Result<bool, Self::Error> {
         Ok(self.status == Status::Verified)
     }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        if self.status == Status::Verified {
+            return Ok(());
+        }
+
+        let request = format!("{:?}", self.request);
+        let response = format!("{:?}", self.response);
+
+        match self.status {
+            Status::WaitingForRequest => Err(
+                ErrorKind::RequestAndResponseWerentVerified(request, response)
+                    .into(),
+            ),
+            Status::RequestVerified => Err(
+                ErrorKind::RequestVerifiedButNotResponse(request, response)
+                    .into(),
+            ),
+            Status::Verified => Ok(()),
+        }
+    }
 }
 
 impl<A, B> VerifierFactory for VerifyRequestResponse<A, B>
 where
-    A: Clone + Eq,
-    B: Clone + Eq,
+    A: Clone + Debug + Eq,
+    B: Clone + Debug + Eq,
 {
     type Verifier = Self;
 

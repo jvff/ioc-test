@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::sync::{Arc, Mutex};
 
@@ -34,8 +34,8 @@ where
 impl<P> IocTestParameters for MockTestParameters<P>
 where
     P: Clone + ServerProto<TcpStream>,
-    P::Request: Clone + Display + Eq + Hash,
-    P::Response: Clone + Eq,
+    P::Request: Clone + Debug + Display + Eq + Hash,
+    P::Response: Clone + Debug + Eq,
     P::Error: Into<async_server::Error> + Into<Error>,
     mock_service::Error: From<P::Error>,
 {

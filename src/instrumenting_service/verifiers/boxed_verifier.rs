@@ -31,4 +31,8 @@ impl<'a, A, B, E> Verifier for BoxedVerifier<'a, A, B, E> {
     fn has_finished(&self) -> Result<bool, Self::Error> {
         self.verifier.has_finished()
     }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        self.verifier.force_stop()
+    }
 }

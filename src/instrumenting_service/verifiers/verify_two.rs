@@ -43,6 +43,10 @@ where
     fn has_finished(&self) -> Result<bool, Self::Error> {
         Ok(self.first.has_finished()? && self.second.has_finished()?)
     }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        self.first.force_stop().and(self.second.force_stop())
+    }
 }
 
 impl<A, B> VerifierFactory for VerifyTwo<A, B>

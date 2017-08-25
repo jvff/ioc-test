@@ -47,6 +47,13 @@ where
 
         Ok(true)
     }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        self.verifiers.iter_mut().fold(
+            Ok(()),
+            |result, ref mut verifier| result.and(verifier.force_stop()),
+        )
+    }
 }
 
 impl<V> VerifierFactory for VerifyAll<V>

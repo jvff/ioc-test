@@ -46,6 +46,10 @@ where
     fn has_finished(&self) -> Result<bool, Self::Error> {
         self.verifier.has_finished().map_err(|error| error.into())
     }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        self.verifier.force_stop().map_err(|error| error.into())
+    }
 }
 
 impl<V, E> VerifierFactory for ConvertedError<V, E>

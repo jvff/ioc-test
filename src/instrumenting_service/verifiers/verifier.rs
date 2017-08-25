@@ -9,6 +9,7 @@ pub trait Verifier {
     fn request(&mut self, request: &Self::Request);
     fn response(&mut self, response: &Self::Response);
     fn has_finished(&self) -> Result<bool, Self::Error>;
+    fn force_stop(&mut self) -> Result<(), Self::Error>;
 
     fn boxed<'a>(
         self,

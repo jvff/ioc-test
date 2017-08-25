@@ -52,6 +52,10 @@ where
             result => result,
         }
     }
+
+    fn force_stop(&mut self) -> Result<(), Self::Error> {
+        self.first.force_stop().and(self.second.force_stop())
+    }
 }
 
 impl<A, B> VerifierFactory for VerifySequence<A, B>

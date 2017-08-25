@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::io;
 
@@ -14,8 +14,8 @@ use super::super::instrumenting_service::WhenVerifier;
 use super::super::instrumenting_service::verifiers::VerifyAll;
 
 pub trait IocTestParameters {
-    type Request: Clone + Display + Eq + Hash + 'static;
-    type Response: Clone + Eq + 'static;
+    type Request: Clone + Debug + Display + Eq + Hash + 'static;
+    type Response: Clone + Debug + Eq + 'static;
     type ProtocolError: From<io::Error> + Into<Error> + Into<async_server::Error>;
     type Protocol: ServerProto<
         TcpStream,
