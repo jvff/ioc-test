@@ -1,3 +1,4 @@
+mod async_server;
 mod errors;
 mod finite_service;
 mod status;
@@ -7,6 +8,7 @@ mod start_server;
 mod connection_future;
 mod bound_connection_future;
 
+pub use self::async_server::AsyncServer;
 pub use self::errors::{Error, ErrorKind};
 pub use self::finite_service::FiniteService;
 pub use self::listening_server::ListeningServer;
