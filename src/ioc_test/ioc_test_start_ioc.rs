@@ -44,7 +44,7 @@ where
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let ioc_process = try_ready!(self.ioc.poll());
-        let ioc = IocInstance::new(IocProcess::new(ioc_process)?)?;
+        let ioc = IocInstance::new(IocProcess::new(ioc_process))?;
 
         let listening_server = self.listening_server
             .take()

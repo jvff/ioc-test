@@ -14,11 +14,11 @@ pub struct IocProcess {
 }
 
 impl IocProcess {
-    pub fn new(process: Child) -> Result<Self> {
-        Ok(Self {
+    pub fn new(process: Child) -> Self {
+        Self {
             process,
             error: None,
-        })
+        }
     }
 
     pub fn shell(&mut self) -> Result<IocShellChannel> {
