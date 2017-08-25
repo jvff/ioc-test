@@ -97,7 +97,7 @@ where
 
     fn ensure_ioc_service_finished(&mut self) -> Poll<(), Error> {
         match self.service.has_finished() {
-            Ok(true) => Ok(Async::Ready(())),
+            Ok(true) => Ok(self.server.shutdown()?),
             Ok(false) => Err(ErrorKind::IncompleteIocShellVerification.into()),
             Err(error) => Err(error.into()),
         }
