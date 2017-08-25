@@ -1,5 +1,6 @@
 use super::super::ioc::IocShellCommand;
 
+#[derive(Clone)]
 pub enum IocTestVariableAction {
     Set(String, String),
     Check(String, String),
