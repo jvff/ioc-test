@@ -75,6 +75,14 @@ where
         When::with_action(request.into(), action)
     }
 
+    pub fn check_variable(&mut self, name: &str, value: &str) {
+        let name = String::from(name);
+        let value = String::from(value);
+
+        self.variable_actions
+            .push(IocTestVariableAction::Check(name, value));
+    }
+
     pub fn set_variable(&mut self, name: &str, value: &str) {
         let name = String::from(name);
         let value = String::from(value);
