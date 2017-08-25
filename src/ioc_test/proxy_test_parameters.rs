@@ -44,7 +44,8 @@ where
 
 impl<P> IocTestParameters for ProxyTestParameters<P>
 where
-    P: Clone + ServerProto<TcpStream>
+    P: Clone
+        + ServerProto<TcpStream>
         + ClientProto<
         TcpStream,
         Request = <P as ServerProto<TcpStream>>::Request,
@@ -67,6 +68,7 @@ where
             SplitSink<<P as ClientProto<TcpStream>>::Transport>,
         >,
         VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        proxy_service::Error,
     >;
     type ServiceFactory = ServiceInstrumenter<
         ProxyServiceFactory<
@@ -74,6 +76,7 @@ where
             SplitSink<<P as ClientProto<TcpStream>>::Transport>,
         >,
         VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        proxy_service::Error,
     >;
 
     fn create_protocol(&self) -> Self::Protocol {

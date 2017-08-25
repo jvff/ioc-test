@@ -47,10 +47,12 @@ where
     type Service = InstrumentingService<
         MockService<P::Request, P::Response>,
         VerifyAll<WhenVerifier<P::Request, P::Response>>,
+        mock_service::Error,
     >;
     type ServiceFactory = ServiceInstrumenter<
         MockServiceFactory<P::Request, P::Response>,
         VerifyAll<WhenVerifier<P::Request, P::Response>>,
+        mock_service::Error,
     >;
 
     fn create_protocol(&self) -> Self::Protocol {
