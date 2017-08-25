@@ -19,8 +19,9 @@ error_chain! {
 
     errors {
         AttemptToStartServerTwice {
-            description("server can't be started twice from same \
-                        MockServerStart future")
+            description(
+                "server can't be started twice from same ServerStart future"
+            )
         }
 
         IncorrectShutDownAttempt(future: String) {
