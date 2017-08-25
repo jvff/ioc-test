@@ -30,6 +30,7 @@ where
     P::Response: Clone,
     P::Error: Into<Error>,
     S: FiniteService<Request = P::Request, Response = P::Response>,
+    S::Error: Into<Error>,
 {
     pub fn new<F>(
         listener: TcpListener,
@@ -47,6 +48,25 @@ where
         Self {
             service: service_factory.new_service(),
             connection: BoundConnectionFuture::from(listener, protocol),
+        }
+    }
+
+    pub fn shutdown(&mut self) -> Poll<(), Error> {
+        if let Ok(ref mut service) = self.service {
+            match service.force_stop() {
+                Ok(()) => Ok(Async::Ready(())),
+                Err(error) => Err(error.into()),
+            }
+        } else {
+            mem::replace(
+                &mut self.service,
+                Err(io::Error::new(
+                    io::ErrorKind::Other,
+                    "attempt to shut down listening server twice",
+                )),
+            )?;
+
+            unreachable!("error should have been retrieved");
         }
     }
 }
