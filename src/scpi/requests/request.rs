@@ -9,7 +9,7 @@ use super::super::extension::ScpiExtension;
 
 use super::{output, source};
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum ScpiRequest<X>
 where
     X: ScpiExtension,
@@ -134,4 +134,3 @@ where
         }
     }
 }
-

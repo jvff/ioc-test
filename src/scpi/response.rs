@@ -1,6 +1,6 @@
 use bytes::BytesMut;
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ScpiResponse {
     Empty,
     Integer(isize),
