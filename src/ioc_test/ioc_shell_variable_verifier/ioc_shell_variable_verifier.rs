@@ -53,17 +53,19 @@ impl Verifier for IocShellVariableVerifier {
     }
 
     fn response(&mut self, response: &Self::Response) {
+        let response = response.trim();
+
         if self.error.is_none() {
             if let Some(expected_response) = self.responses.pop_front() {
                 if *response != expected_response {
                     self.error = Some(ErrorStatus::IncorrectOutput {
-                        received: response.clone(),
+                        received: String::from(response),
                         expected: expected_response,
                     });
                 }
             } else {
                 self.error =
-                    Some(ErrorStatus::UnexpectedOutput(response.clone()));
+                    Some(ErrorStatus::UnexpectedOutput(String::from(response)));
             }
         }
     }
