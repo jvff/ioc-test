@@ -2,6 +2,7 @@ use std::mem;
 use std::process::ExitStatus;
 
 use futures::{Future, Poll};
+use tokio_core::reactor::Handle;
 use tokio_process::Child;
 
 use super::errors::{Error, ErrorKind, Result};
@@ -10,15 +11,21 @@ use super::ioc_shell_channel::IocShellChannel;
 #[derive(Debug)]
 pub struct IocProcess {
     process: Child,
+    handle: Handle,
     error: Option<Error>,
 }
 
 impl IocProcess {
-    pub fn new(process: Child) -> Self {
+    pub fn new(process: Child, handle: Handle) -> Self {
         Self {
             process,
+            handle,
             error: None,
         }
+    }
+
+    pub fn handle(&self) -> &Handle {
+        &self.handle
     }
 
     pub fn shell(&mut self) -> Result<IocShellChannel> {

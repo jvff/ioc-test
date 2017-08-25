@@ -3,7 +3,9 @@ use std::process::{Command, Stdio};
 
 use futures::{Async, Future, Poll};
 use tokio_core::reactor::Handle;
-use tokio_process::{Child, CommandExt};
+use tokio_process::CommandExt;
+
+use super::ioc_process::IocProcess;
 
 pub struct IocSpawn {
     handle: Handle,
@@ -29,7 +31,7 @@ impl IocSpawn {
 }
 
 impl Future for IocSpawn {
-    type Item = Child;
+    type Item = IocProcess;
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
@@ -42,6 +44,6 @@ impl Future for IocSpawn {
             .stdin(Stdio::piped())
             .spawn_async(&self.handle)?;
 
-        Ok(Async::Ready(process))
+        Ok(Async::Ready(IocProcess::new(process, self.handle.clone())))
     }
 }

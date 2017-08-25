@@ -5,7 +5,6 @@ use super::ioc_test_execution::IocTestExecution;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_variable_action::IocTestVariableAction;
 use super::super::ioc::IocInstance;
-use super::super::ioc::IocProcess;
 use super::super::ioc::IocSpawn;
 use super::super::async_server::ListeningServer;
 
@@ -44,7 +43,7 @@ where
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let ioc_process = try_ready!(self.ioc.poll());
-        let ioc = IocInstance::new(IocProcess::new(ioc_process))?;
+        let ioc = IocInstance::new(ioc_process)?;
 
         let listening_server = self.listening_server
             .take()
