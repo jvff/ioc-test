@@ -6,6 +6,7 @@ mod when;
 mod when_action;
 mod when_verifier;
 
+pub use self::instrumented_response::InstrumentedResponse;
 pub use self::instrumenting_service::InstrumentingService;
 pub use self::service_instrumenter::ServiceInstrumenter;
 pub use self::when::When;
