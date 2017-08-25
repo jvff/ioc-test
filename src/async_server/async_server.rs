@@ -4,14 +4,14 @@ use std::mem;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
-use futures::{Async, Future, Poll};
+use futures::{Async, Future, Poll, Stream, Sink};
 use tokio_core::net::TcpStream;
 use tokio_core::reactor::Handle;
 use tokio_proto::pipeline::ServerProto;
 use tokio_service::NewService;
 
 use super::active_server::ActiveServer;
-use super::errors::Error;
+use super::errors::{Error, ErrorKind};
 use super::finite_service::FiniteService;
 use super::listening_server::ListeningServer;
 use super::start_server::StartServer;
@@ -30,8 +30,12 @@ where
     P::Error: Into<Error>,
 {
     Binding(StartServer<P, S>),
+    BindCancelled(StartServer<P, S>),
     Listening(ListeningServer<P, S::Instance>),
+    ListenCancelled(ListeningServer<P, S::Instance>),
     Active(ActiveServer<P::Transport, S::Instance>),
+    Disconnecting(ActiveServer<P::Transport, S::Instance>),
+    Dead,
 }
 
 impl<P, S> AsyncServer<P, S>
@@ -47,6 +51,8 @@ where
         Response = <S as NewService>::Response,
     >,
     P::Error: Into<Error>,
+    P::Transport: Stream<Item = S::Request> + Sink<SinkItem = S::Response>,
+    <P::Transport as Stream>::Error: Into<S::Error>,
 {
     pub fn new(
         address: SocketAddr,
@@ -57,6 +63,47 @@ where
         AsyncServer::Binding(
             StartServer::new(address, service_factory, protocol, handle),
         )
+    }
+
+    pub fn shutdown(&mut self) -> Poll<(), Error> {
+        let shutdown_result = match *self {
+            AsyncServer::Binding(ref mut handler) => handler.shutdown(),
+            AsyncServer::BindCancelled(ref mut handler) => {
+                return handler.shutdown();
+            }
+            AsyncServer::Listening(ref mut handler) => handler.shutdown(),
+            AsyncServer::ListenCancelled(ref mut handler) => {
+                return handler.shutdown();
+            }
+            AsyncServer::Active(ref mut handler) => handler.shutdown(),
+            AsyncServer::Disconnecting(ref mut handler) => {
+                return handler.shutdown();
+            }
+            AsyncServer::Dead => Ok(Async::Ready(())),
+        };
+
+        let new_state = match shutdown_result {
+            Ok(Async::NotReady) => {
+                match mem::replace(self, AsyncServer::Dead) {
+                    AsyncServer::Binding(handler) => {
+                        AsyncServer::BindCancelled(handler)
+                    }
+                    AsyncServer::Listening(handler) => {
+                        AsyncServer::ListenCancelled(handler)
+                    }
+                    AsyncServer::Active(handler) => {
+                        AsyncServer::Disconnecting(handler)
+                    }
+                    AsyncServer::Dead => AsyncServer::Dead,
+                    shutting_down_state => shutting_down_state,
+                }
+            }
+            _ => AsyncServer::Dead,
+        };
+
+        mem::replace(self, new_state);
+
+        shutdown_result
     }
 }
 
@@ -143,6 +190,10 @@ where
                 try_ready!(handler.poll());
                 None
             }
+            AsyncServer::Dead => {
+                return Err(ErrorKind::AsyncServerWasShutDown.into());
+            }
+            _ => return Err(ErrorKind::AsyncServerIsShuttingDown.into()),
         };
 
         if let Some(new_state) = maybe_new_state {
