@@ -3,10 +3,14 @@ use futures::{Async, Future, Poll};
 use futures::future::{Flatten, JoinAll};
 use tokio_service::Service;
 
-use super::errors::{Error, Result};
+use super::errors::{Error, ErrorKind, Result};
+use super::ioc_shell_variable_verifier::IocShellVariableVerifier;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_variable_action::IocTestVariableAction;
-use super::super::ioc::{IocInstance, IocShellCommandOutput};
+use super::super::async_server::FiniteService;
+use super::super::ioc::{IocInstance, IocShellCommandOutput, IocShellService};
+use super::super::instrumenting_service::{InstrumentedResponse,
+                                          InstrumentingService};
 use super::super::async_server;
 use super::super::async_server::ListeningServer;
 
@@ -17,7 +21,17 @@ where
 {
     server: Flatten<ListeningServer<P::Protocol, P::Service>>,
     ioc: IocInstance,
-    commands: JoinAll<Vec<IocShellCommandOutput>>,
+    service:
+        InstrumentingService<IocShellService, IocShellVariableVerifier, Error>,
+    commands: JoinAll<
+        Vec<
+            InstrumentedResponse<
+                IocShellCommandOutput,
+                IocShellVariableVerifier,
+                Error,
+            >,
+        >,
+    >,
 }
 
 impl<P> IocTestExecution<P>
@@ -29,11 +43,14 @@ where
         server: Flatten<ListeningServer<P::Protocol, P::Service>>,
         variable_actions: Vec<IocTestVariableAction>,
     ) -> Result<Self> {
+        let verifier = IocShellVariableVerifier::new(variable_actions.clone());
         let ioc_service = ioc.shell()?;
+        let service = InstrumentingService::new(ioc_service, verifier);
+
         let command_futures = variable_actions
-            .into_iter()
+            .iter()
             .map(|variable_action| {
-                ioc_service.call(variable_action.ioc_shell_command())
+                service.call(variable_action.ioc_shell_command())
             })
             .collect();
         let commands = future::join_all(command_futures);
@@ -41,6 +58,7 @@ where
         Ok(Self {
             ioc,
             server,
+            service,
             commands,
         })
     }
@@ -49,7 +67,7 @@ where
         let poll_result = self.ioc.poll();
 
         match poll_result {
-            Ok(Async::Ready(_)) => Ok(Async::Ready(())),
+            Ok(Async::Ready(_)) => self.ensure_ioc_service_finished(),
             Ok(Async::NotReady) => self.poll_ioc_commands(),
             Err(error) => Err(error.into()),
         }
@@ -57,8 +75,7 @@ where
 
     fn poll_ioc_commands(&mut self) -> Poll<(), Error> {
         match self.commands.poll() {
-            Ok(Async::Ready(_)) => Ok(Async::Ready(())),
-            Ok(Async::NotReady) => Ok(Async::NotReady),
+            Ok(_) => Ok(Async::NotReady),
             Err(error) => Err(error.into()),
         }
     }
@@ -67,6 +84,22 @@ where
         self.ioc.kill();
 
         self.poll_ioc()
+    }
+
+    fn poll_ioc_service(&mut self) -> Poll<(), Error> {
+        match self.service.has_finished() {
+            Ok(true) => Ok(Async::Ready(())),
+            Ok(false) => Ok(Async::NotReady),
+            Err(error) => Err(error.into()),
+        }
+    }
+
+    fn ensure_ioc_service_finished(&mut self) -> Poll<(), Error> {
+        match self.service.has_finished() {
+            Ok(true) => Ok(Async::Ready(())),
+            Ok(false) => Err(ErrorKind::IncompleteIocShellVerification.into()),
+            Err(error) => Err(error.into()),
+        }
     }
 }
 
@@ -78,6 +111,8 @@ where
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        self.poll_ioc_service()?;
+
         let poll_result = self.server.poll();
 
         match poll_result {
