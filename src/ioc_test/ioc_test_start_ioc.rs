@@ -45,10 +45,10 @@ where
         let ioc_process = try_ready!(self.ioc.poll());
         let ioc = IocInstance::new(ioc_process)?;
 
-        let listening_server = self.listening_server
+        let server = self.listening_server
             .take()
-            .expect("IocTestStartIoc polled after it finished");
-        let server = listening_server.flatten();
+            .expect("IocTestStartIoc polled after it finished")
+            .into();
 
         let variable_actions = self.variable_actions
             .take()

@@ -2,26 +2,25 @@ use std::time::Duration;
 
 use futures::future;
 use futures::{Async, Future, Poll};
-use futures::future::{Flatten, JoinAll};
+use futures::future::JoinAll;
 use tokio_service::Service;
 
 use super::errors::{Error, ErrorKind, Result};
 use super::ioc_shell_variable_verifier::IocShellVariableVerifier;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_variable_action::IocTestVariableAction;
-use super::super::async_server::FiniteService;
+use super::super::async_server;
+use super::super::async_server::{AsyncServer, FiniteService};
 use super::super::ioc::{IocInstance, IocShellCommandOutput, IocShellService};
 use super::super::instrumenting_service::{InstrumentedResponse,
                                           InstrumentingService};
-use super::super::async_server;
-use super::super::async_server::ListeningServer;
 
 pub struct IocTestExecution<P>
 where
     P: IocTestParameters,
     P::ServiceError: Into<async_server::Error>,
 {
-    server: Flatten<ListeningServer<P::Protocol, P::Service>>,
+    server: AsyncServer<P::Protocol, P::ServiceFactory>,
     ioc: IocInstance,
     service:
         InstrumentingService<IocShellService, IocShellVariableVerifier, Error>,
@@ -42,7 +41,7 @@ where
 {
     pub fn new(
         mut ioc: IocInstance,
-        server: Flatten<ListeningServer<P::Protocol, P::Service>>,
+        server: AsyncServer<P::Protocol, P::ServiceFactory>,
         variable_actions: Vec<IocTestVariableAction>,
     ) -> Result<Self> {
         let verifier = IocShellVariableVerifier::new(variable_actions.clone());
