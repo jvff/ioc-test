@@ -26,9 +26,9 @@ error_chain! {
         }
 
         IncorrectIocShellOutput(received: String, expected: String) {
-            description("received an incorrect IOC shell command")
+            description("received incorrect IOC shell output")
             display(
-                "received an incorrect IOC shell command: received \"{}\" but \
+                "received incorrect IOC shell output: received \"{}\" but \
                  expected \"{}\"",
                 received,
                 expected,
