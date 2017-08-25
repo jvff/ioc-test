@@ -71,4 +71,12 @@ where
 
         Ok(verifier.has_finished()?)
     }
+
+    fn force_stop(&mut self) -> Result<(), E> {
+        let mut verifier = self.verifier.lock().expect(
+            "another thread panicked while holding a lock to a verifier",
+        );
+
+        Ok(verifier.force_stop()?)
+    }
 }
