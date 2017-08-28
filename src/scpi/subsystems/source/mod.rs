@@ -10,74 +10,82 @@ use super::super::request::ScpiRequest;
 use super::super::str_extensions::StrExtensions;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum ScpiSourceSubsystem {
-    SourceFrequencyGet(usize),
-    SourcePhaseGet(usize),
-    SourceVoltageGet(usize),
-    SourceVoltageOffsetGet(usize),
-    SourceFunctionQuery(usize),
-    SourceArbitraryFunctionFileQuery(usize),
-    SourceArbitraryFunctionSampleRateGet(usize),
-    SourceNoiseFunctionBandwidthGet(usize),
-    SourcePrbsFunctionBitRateGet(usize),
-    SourcePrbsFunctionPolynomialGet(usize),
-    SourcePrbsFunctionTransitionGet(usize),
-    SourcePulseFunctionLeadingEdgeTransitionGet(usize),
-    SourcePulseFunctionTrailingEdgeTransitionGet(usize),
-    SourcePulseFunctionPulseWidthGet(usize),
-    SourceRampFunctionSymmetryGet(usize),
-    SourceSquareFunctionDutyCycleGet(usize),
+pub struct ScpiSourceSubsystem {
+    source: usize,
+    command: SourceCommand,
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub enum SourceCommand {
+    FrequencyGet,
+    PhaseGet,
+    VoltageGet,
+    VoltageOffsetGet,
+    FunctionQuery,
+    ArbitraryFunctionFileQuery,
+    ArbitraryFunctionSampleRateGet,
+    NoiseFunctionBandwidthGet,
+    PrbsFunctionBitRateGet,
+    PrbsFunctionPolynomialGet,
+    PrbsFunctionTransitionGet,
+    PulseFunctionLeadingEdgeTransitionGet,
+    PulseFunctionTrailingEdgeTransitionGet,
+    PulseFunctionPulseWidthGet,
+    RampFunctionSymmetryGet,
+    SquareFunctionDutyCycleGet,
 }
 
 impl Display for ScpiSourceSubsystem {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
-        match *self {
-            ScpiSourceSubsystem::SourceFrequencyGet(source) => {
+        let source = self.source;
+
+        match self.command {
+            SourceCommand::FrequencyGet => {
                 write!(formatter, "SOUR{}:FREQ?", source)
             }
-            ScpiSourceSubsystem::SourcePhaseGet(source) => {
+            SourceCommand::PhaseGet => {
                 write!(formatter, "SOUR{}:PHAS?", source)
             }
-            ScpiSourceSubsystem::SourceVoltageGet(source) => {
+            SourceCommand::VoltageGet => {
                 write!(formatter, "SOUR{}:VOLT?", source)
             }
-            ScpiSourceSubsystem::SourceVoltageOffsetGet(source) => {
+            SourceCommand::VoltageOffsetGet => {
                 write!(formatter, "SOUR{}:VOLT:OFFSet?", source)
             }
-            ScpiSourceSubsystem::SourceFunctionQuery(source) => {
+            SourceCommand::FunctionQuery => {
                 write!(formatter, "SOUR{}:FUNC?", source)
             }
-            ScpiSourceSubsystem::SourceArbitraryFunctionFileQuery(source) => {
+            SourceCommand::ArbitraryFunctionFileQuery => {
                 write!(formatter, "SOUR{}:FUNC:ARB?", source)
             }
-            ScpiSourceSubsystem::SourceArbitraryFunctionSampleRateGet(source) => {
+            SourceCommand::ArbitraryFunctionSampleRateGet => {
                 write!(formatter, "SOUR{}:FUNC:ARB:SRAT?", source)
             }
-            ScpiSourceSubsystem::SourceNoiseFunctionBandwidthGet(source) => {
+            SourceCommand::NoiseFunctionBandwidthGet => {
                 write!(formatter, "SOUR{}:FUNC:NOIS:BAND?", source)
             }
-            ScpiSourceSubsystem::SourcePrbsFunctionBitRateGet(source) => {
+            SourceCommand::PrbsFunctionBitRateGet => {
                 write!(formatter, "SOUR{}:FUNC:PRBS:BRAT?", source)
             }
-            ScpiSourceSubsystem::SourcePrbsFunctionPolynomialGet(source) => {
+            SourceCommand::PrbsFunctionPolynomialGet => {
                 write!(formatter, "SOUR{}:FUNC:PRBS:DATA?", source)
             }
-            ScpiSourceSubsystem::SourcePrbsFunctionTransitionGet(source) => {
+            SourceCommand::PrbsFunctionTransitionGet => {
                 write!(formatter, "SOUR{}:FUNC:PRBS:TRAN?", source)
             }
-            ScpiSourceSubsystem::SourcePulseFunctionLeadingEdgeTransitionGet(
-                source,
-            ) => write!(formatter, "SOUR{}:FUNC:PULS:TRAN:LEAD?", source),
-            ScpiSourceSubsystem::SourcePulseFunctionTrailingEdgeTransitionGet(
-                source,
-            ) => write!(formatter, "SOUR{}:FUNC:PULS:TRAN:TRA?", source),
-            ScpiSourceSubsystem::SourcePulseFunctionPulseWidthGet(source) => {
+            SourceCommand::PulseFunctionLeadingEdgeTransitionGet => {
+                write!(formatter, "SOUR{}:FUNC:PULS:TRAN:LEAD?", source)
+            }
+            SourceCommand::PulseFunctionTrailingEdgeTransitionGet => {
+                write!(formatter, "SOUR{}:FUNC:PULS:TRAN:TRA?", source)
+            }
+            SourceCommand::PulseFunctionPulseWidthGet => {
                 write!(formatter, "SOUR{}:FUNC:PULS:WIDT?", source)
             }
-            ScpiSourceSubsystem::SourceRampFunctionSymmetryGet(source) => {
+            SourceCommand::RampFunctionSymmetryGet => {
                 write!(formatter, "SOUR{}:FUNC:RAMP:SYMM?", source)
             }
-            ScpiSourceSubsystem::SourceSquareFunctionDutyCycleGet(source) => {
+            SourceCommand::SquareFunctionDutyCycleGet => {
                 write!(formatter, "SOUR{}:FUNC:SQU:DCYC?", source)
             }
         }
@@ -101,12 +109,16 @@ pub fn decode_source_message(string: &str) -> Option<ScpiSourceSubsystem> {
         if command.starts_with(":") {
             let command = command.skip_chars(1);
 
-            match command.view_first_chars(4) {
-                "FREQ" => return frequency::decode(command, source),
-                "FUNC" => return function::decode(command, source),
-                "PHAS" => return phase::decode(command, source),
-                "VOLT" => return voltage::decode(command, source),
-                _ => {}
+            let decoded_command = match command.view_first_chars(4) {
+                "FREQ" => frequency::decode(command),
+                "FUNC" => function::decode(command),
+                "PHAS" => phase::decode(command),
+                "VOLT" => voltage::decode(command),
+                _ => None,
+            };
+
+            if let Some(command) = decoded_command {
+                return Some(ScpiSourceSubsystem { source, command });
             }
         }
     }
