@@ -6,7 +6,7 @@ mod voltage;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
-use super::super::extension::ScpiExtension;
+use super::super::request::ScpiRequest;
 use super::super::str_extensions::StrExtensions;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -84,7 +84,7 @@ impl Display for ScpiSourceSubsystem {
     }
 }
 
-impl ScpiExtension for ScpiSourceSubsystem {
+impl ScpiRequest for ScpiSourceSubsystem {
     fn decode(message: &str) -> Option<Self> {
         if message.view_first_chars(4) == "SOUR" {
             return decode_source_message(message);

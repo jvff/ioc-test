@@ -5,28 +5,27 @@ use bytes::BytesMut;
 use tokio_io::codec::{Decoder, Encoder};
 
 use super::errors::{Error, Result};
-use super::extension::ScpiExtension;
-use super::requests::ScpiRequest;
+use super::request::ScpiRequest;
 use super::response::ScpiResponse;
 
-pub struct ScpiServerCodec<X: ScpiExtension> {
-    _extension: PhantomData<X>,
+pub struct ScpiServerCodec<A: ScpiRequest> {
+    _request: PhantomData<A>,
 }
 
-impl<X> ScpiServerCodec<X>
+impl<A> ScpiServerCodec<A>
 where
-    X: ScpiExtension,
+    A: ScpiRequest,
 {
     pub fn new() -> Self {
         Self {
-            _extension: PhantomData,
+            _request: PhantomData,
         }
     }
 }
 
-impl<X> Encoder for ScpiServerCodec<X>
+impl<A> Encoder for ScpiServerCodec<A>
 where
-    X: ScpiExtension,
+    A: ScpiRequest,
 {
     type Item = ScpiResponse;
     type Error = Error;
@@ -42,11 +41,11 @@ where
     }
 }
 
-impl<X> Decoder for ScpiServerCodec<X>
+impl<A> Decoder for ScpiServerCodec<A>
 where
-    X: ScpiExtension,
+    A: ScpiRequest,
 {
-    type Item = ScpiRequest<X>;
+    type Item = A;
     type Error = Error;
 
     fn decode(&mut self, buffer: &mut BytesMut) -> Result<Option<Self::Item>> {
@@ -58,7 +57,7 @@ where
 
             remove_trailing_bytes(buffer);
 
-            Ok(Some(ScpiRequest::from(message)?))
+            Ok(Some(A::from(message)?))
         } else {
             Ok(None)
         }

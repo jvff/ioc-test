@@ -6,36 +6,35 @@ use tokio_proto::pipeline::{ClientProto, ServerProto};
 
 use super::client_codec::ScpiClientCodec;
 use super::errors::{Error, Result};
-use super::extension::ScpiExtension;
-use super::requests::ScpiRequest;
+use super::request::ScpiRequest;
 use super::response::ScpiResponse;
 use super::server_codec::ScpiServerCodec;
 
 #[derive(Clone)]
-pub struct ScpiProtocol<X: ScpiExtension> {
-    _extension: PhantomData<X>,
+pub struct ScpiProtocol<A: ScpiRequest> {
+    _request: PhantomData<A>,
 }
 
-impl<X> ScpiProtocol<X>
+impl<A> ScpiProtocol<A>
 where
-    X: ScpiExtension + 'static,
+    A: ScpiRequest + 'static,
 {
     pub fn new() -> Self {
         Self {
-            _extension: PhantomData,
+            _request: PhantomData,
         }
     }
 }
 
-impl<T, X> ServerProto<T> for ScpiProtocol<X>
+impl<T, A> ServerProto<T> for ScpiProtocol<A>
 where
     T: AsyncRead + AsyncWrite + 'static,
-    X: ScpiExtension + 'static,
+    A: ScpiRequest + 'static,
 {
-    type Request = ScpiRequest<X>;
+    type Request = A;
     type Response = ScpiResponse;
     type Error = Error;
-    type Transport = Framed<T, ScpiServerCodec<X>>;
+    type Transport = Framed<T, ScpiServerCodec<A>>;
     type BindTransport = Result<Self::Transport>;
 
     fn bind_transport(&self, io: T) -> Self::BindTransport {
@@ -43,15 +42,15 @@ where
     }
 }
 
-impl<T, X> ClientProto<T> for ScpiProtocol<X>
+impl<T, A> ClientProto<T> for ScpiProtocol<A>
 where
     T: AsyncRead + AsyncWrite + 'static,
-    X: ScpiExtension + 'static,
+    A: ScpiRequest + 'static,
 {
-    type Request = ScpiRequest<X>;
+    type Request = A;
     type Response = ScpiResponse;
     type Error = Error;
-    type Transport = Framed<T, ScpiClientCodec<X>>;
+    type Transport = Framed<T, ScpiClientCodec<A>>;
     type BindTransport = Result<Self::Transport>;
 
     fn bind_transport(&self, io: T) -> Self::BindTransport {
