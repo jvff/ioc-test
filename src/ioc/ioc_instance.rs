@@ -1,6 +1,6 @@
 use std::{io, mem};
 use std::process::ExitStatus;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use futures::{Async, Future, Poll};
 use tokio_core::reactor::Timeout;
@@ -11,7 +11,7 @@ use super::ioc_shell_service::IocShellService;
 
 pub struct IocInstance {
     process: IocProcess,
-    timeout: Option<io::Result<Timeout>>,
+    timeout: Option<(io::Result<Timeout>, Instant)>,
     error: Option<Error>,
 }
 
@@ -37,15 +37,30 @@ impl IocInstance {
     }
 
     pub fn kill_after(&mut self, duration: Duration) {
-        self.timeout = Some(Timeout::new(duration, self.process.handle()));
+        let new_instant = Instant::now() + duration;
+
+        let should_set_timeout = match self.timeout {
+            Some((_, ref instant)) => new_instant < *instant,
+            None => true,
+        };
+
+        if should_set_timeout {
+            self.set_timeout(duration, new_instant);
+        }
+    }
+
+    fn set_timeout(&mut self, duration: Duration, instant: Instant) {
+        let timeout_result = Timeout::new(duration, self.process.handle());
+
+        self.timeout = Some((timeout_result, instant));
     }
 
     fn poll_timeout(&mut self) -> Poll<(), io::Error> {
-        if let Some(timeout_spawn_result) = self.timeout.take() {
+        if let Some((timeout_spawn_result, instant)) = self.timeout.take() {
             let (poll_result, timeout_spawn_result) =
                 self.poll_timeout_object(timeout_spawn_result?);
 
-            self.timeout = Some(timeout_spawn_result);
+            self.timeout = Some((timeout_spawn_result, instant));
 
             try_ready!(poll_result);
 
