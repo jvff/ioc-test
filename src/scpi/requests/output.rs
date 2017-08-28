@@ -5,24 +5,44 @@ use super::super::extension::ScpiExtension;
 use super::str_extensions::StrExtensions;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum ScpiOutputSubsystem {
-    OutputOn(usize),
-    OutputOff(usize),
-    OutputStatus(usize),
+pub struct ScpiOutputSubsystem {
+    channel: usize,
+    command: OutputCommand,
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub enum OutputCommand {
+    On,
+    Off,
+    Status,
+}
+
+impl ScpiOutputSubsystem {
+    pub fn new(channel: usize, command: OutputCommand) -> Self {
+        Self { channel, command }
+    }
+
+    pub fn status(channel: usize) -> Self {
+        Self::new(channel, OutputCommand::Status)
+    }
+
+    pub fn on(channel: usize) -> Self {
+        Self::new(channel, OutputCommand::On)
+    }
+
+    pub fn off(channel: usize) -> Self {
+        Self::new(channel, OutputCommand::Off)
+    }
 }
 
 impl Display for ScpiOutputSubsystem {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
-        match *self {
-            ScpiOutputSubsystem::OutputOn(channel) => {
-                write!(formatter, "OUTP{} ON", channel)
-            }
-            ScpiOutputSubsystem::OutputOff(channel) => {
-                write!(formatter, "OUTP{} OFF", channel)
-            }
-            ScpiOutputSubsystem::OutputStatus(channel) => {
-                write!(formatter, "OUTP{}?", channel)
-            }
+        let channel = self.channel;
+
+        match self.command {
+            OutputCommand::On => write!(formatter, "OUTP{} ON", channel),
+            OutputCommand::Off => write!(formatter, "OUTP{} OFF", channel),
+            OutputCommand::Status => write!(formatter, "OUTP{}?", channel),
         }
     }
 }
@@ -42,11 +62,11 @@ pub fn decode_output_message(message: &str) -> Option<ScpiOutputSubsystem> {
 
     if let Some((channel, command)) = request_data.parse_integer() {
         if command == "?" {
-            return Some(ScpiOutputSubsystem::OutputStatus(channel));
+            return Some(ScpiOutputSubsystem::status(channel));
         } else if command.chars().next() == Some(' ') {
             match command.trim() {
-                "ON" => return Some(ScpiOutputSubsystem::OutputOn(channel)),
-                "OFF" => return Some(ScpiOutputSubsystem::OutputOff(channel)),
+                "ON" => return Some(ScpiOutputSubsystem::on(channel)),
+                "OFF" => return Some(ScpiOutputSubsystem::off(channel)),
                 _ => {}
             }
         }
