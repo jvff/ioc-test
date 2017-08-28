@@ -2,7 +2,7 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 
 use super::super::extension::ScpiExtension;
-use super::str_extensions::StrExtensions;
+use super::super::StrExtensions;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct ScpiOutputSubsystem {
