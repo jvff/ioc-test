@@ -1,3 +1,6 @@
+#[macro_use]
+pub mod macros;
+
 mod str_extensions;
 
 mod errors;
