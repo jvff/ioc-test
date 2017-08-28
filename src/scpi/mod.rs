@@ -1,3 +1,5 @@
+mod str_extensions;
+
 mod errors;
 mod extension;
 mod no_extension;
@@ -18,5 +20,3 @@ pub use self::protocol::ScpiProtocol;
 pub use self::requests::ScpiRequest;
 pub use self::response::ScpiResponse;
 pub use self::subsystems::output::ScpiOutputSubsystem;
-
-use self::requests::StrExtensions;

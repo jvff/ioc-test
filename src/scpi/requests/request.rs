@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use bytes::BytesMut;
 
-use super::str_extensions::StrExtensions;
+use super::super::str_extensions::StrExtensions;
 use super::super::errors::{ErrorKind, Result};
 use super::super::extension::ScpiExtension;
 

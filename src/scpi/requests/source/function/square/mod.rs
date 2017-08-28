@@ -2,7 +2,7 @@ mod duty_cycle;
 
 use super::super::super::ScpiRequest;
 use super::super::super::super::extension::ScpiExtension;
-use super::super::super::str_extensions::StrExtensions;
+use super::super::super::super::str_extensions::StrExtensions;
 
 pub fn decode<X>(string: &str, source: usize) -> Option<ScpiRequest<X>>
 where

@@ -5,7 +5,7 @@ mod voltage;
 
 use super::ScpiRequest;
 use super::super::extension::ScpiExtension;
-use super::str_extensions::StrExtensions;
+use super::super::str_extensions::StrExtensions;
 
 pub fn decode<X>(string: &str) -> Option<ScpiRequest<X>>
 where
