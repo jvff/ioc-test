@@ -35,6 +35,12 @@ pub enum SourceCommand {
     SquareFunctionDutyCycleGet,
 }
 
+impl ScpiSourceSubsystem {
+    pub fn new(source: usize, command: SourceCommand) -> Self {
+        Self { source, command }
+    }
+}
+
 impl Display for ScpiSourceSubsystem {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         let source = self.source;
@@ -127,3 +133,110 @@ pub fn decode_source_message(string: &str) -> Option<ScpiSourceSubsystem> {
 }
 
 pub type Subsystem = ScpiSourceSubsystem;
+
+pub struct Builder {
+    source: usize,
+}
+
+pub fn builder(source: usize) -> Builder {
+    Builder { source }
+}
+
+impl Builder {
+    pub fn get_frequency(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(self.source, SourceCommand::FrequencyGet)
+    }
+
+    pub fn get_phase(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(self.source, SourceCommand::PhaseGet)
+    }
+
+    pub fn get_voltage(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(self.source, SourceCommand::VoltageGet)
+    }
+
+    pub fn get_voltage_offset(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(self.source, SourceCommand::VoltageOffsetGet)
+    }
+
+    pub fn query_function(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(self.source, SourceCommand::FunctionQuery)
+    }
+
+    pub fn query_arbitrary_function_file(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::ArbitraryFunctionFileQuery,
+        )
+    }
+
+    pub fn get_arbitrary_function_sample_rate(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::ArbitraryFunctionSampleRateGet,
+        )
+    }
+
+    pub fn get_noise_function_bandwidth(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::NoiseFunctionBandwidthGet,
+        )
+    }
+
+    pub fn get_prbs_function_bit_rate(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::PrbsFunctionBitRateGet,
+        )
+    }
+
+    pub fn get_prbs_function_polynomial(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::PrbsFunctionPolynomialGet,
+        )
+    }
+
+    pub fn get_prbs_function_transition(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::PrbsFunctionTransitionGet,
+        )
+    }
+
+    pub fn get_pulse_function_leading_edge(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::PulseFunctionLeadingEdgeTransitionGet,
+        )
+    }
+
+    pub fn get_pulse_function_trailing_edge(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::PulseFunctionTrailingEdgeTransitionGet,
+        )
+    }
+
+    pub fn get_pulse_function_pulse_width(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::PulseFunctionPulseWidthGet,
+        )
+    }
+
+    pub fn get_ramp_function_symmetry(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::RampFunctionSymmetryGet,
+        )
+    }
+
+    pub fn get_square_function_duty_cycle(self) -> ScpiSourceSubsystem {
+        ScpiSourceSubsystem::new(
+            self.source,
+            SourceCommand::SquareFunctionDutyCycleGet,
+        )
+    }
+}

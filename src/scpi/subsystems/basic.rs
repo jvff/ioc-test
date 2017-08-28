@@ -20,7 +20,7 @@ impl Display for ScpiBasicSubsystem {
 impl ScpiRequest for ScpiBasicSubsystem {
     fn decode(message: &str) -> Option<Self> {
         if message.view_first_chars(4) == "*CAL?" {
-            return Some(ScpiBasicSubsystem::CalibrationQuery)
+            return Some(ScpiBasicSubsystem::CalibrationQuery);
         }
 
         None
@@ -28,3 +28,15 @@ impl ScpiRequest for ScpiBasicSubsystem {
 }
 
 pub type Subsystem = ScpiBasicSubsystem;
+
+pub struct Builder;
+
+pub fn builder() -> Builder {
+    Builder
+}
+
+impl Builder {
+    pub fn calibration(self) -> ScpiBasicSubsystem {
+        ScpiBasicSubsystem::CalibrationQuery
+    }
+}

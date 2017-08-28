@@ -76,3 +76,25 @@ pub fn decode_output_message(message: &str) -> Option<ScpiOutputSubsystem> {
 }
 
 pub type Subsystem = ScpiOutputSubsystem;
+
+pub struct Builder {
+    channel: usize,
+}
+
+pub fn builder(channel: usize) -> Builder {
+    Builder { channel }
+}
+
+impl Builder {
+    pub fn status(self) -> ScpiOutputSubsystem {
+        ScpiOutputSubsystem::status(self.channel)
+    }
+
+    pub fn on(self) -> ScpiOutputSubsystem {
+        ScpiOutputSubsystem::on(self.channel)
+    }
+
+    pub fn off(self) -> ScpiOutputSubsystem {
+        ScpiOutputSubsystem::off(self.channel)
+    }
+}
