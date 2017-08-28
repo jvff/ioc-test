@@ -19,5 +19,6 @@ pub use self::no_extension::NoScpiExtension;
 pub use self::protocol::ScpiProtocol;
 pub use self::requests::ScpiRequest;
 pub use self::response::ScpiResponse;
+pub use self::subsystems::basic::ScpiBasicSubsystem;
 pub use self::subsystems::output::ScpiOutputSubsystem;
 pub use self::subsystems::source::ScpiSourceSubsystem;
