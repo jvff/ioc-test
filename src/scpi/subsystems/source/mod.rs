@@ -113,3 +113,5 @@ pub fn decode_source_message(string: &str) -> Option<ScpiSourceSubsystem> {
 
     None
 }
+
+pub type Subsystem = ScpiSourceSubsystem;

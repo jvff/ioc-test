@@ -74,3 +74,5 @@ pub fn decode_output_message(message: &str) -> Option<ScpiOutputSubsystem> {
 
     None
 }
+
+pub type Subsystem = ScpiOutputSubsystem;

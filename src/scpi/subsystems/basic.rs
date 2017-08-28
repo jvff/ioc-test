@@ -26,3 +26,5 @@ impl ScpiRequest for ScpiBasicSubsystem {
         None
     }
 }
+
+pub type Subsystem = ScpiBasicSubsystem;
