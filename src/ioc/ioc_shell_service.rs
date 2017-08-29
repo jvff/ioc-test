@@ -8,6 +8,7 @@ use super::ioc_shell_command::IocShellCommand;
 use super::ioc_shell_command_output::IocShellCommandOutput;
 use super::ioc_shell_service_scheduler::IocShellServiceScheduler;
 
+#[derive(Clone)]
 pub struct IocShellService {
     scheduler: Arc<Mutex<IocShellServiceScheduler>>,
 }

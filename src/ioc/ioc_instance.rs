@@ -11,6 +11,7 @@ use super::ioc_shell_service::IocShellService;
 
 pub struct IocInstance {
     process: IocProcess,
+    shell: Option<IocShellService>,
     timeout: Option<(io::Result<Timeout>, Instant)>,
     error: Option<Error>,
 }
@@ -19,15 +20,23 @@ impl IocInstance {
     pub fn new(process: IocProcess) -> Result<Self> {
         Ok(Self {
             process,
+            shell: None,
             timeout: None,
             error: None,
         })
     }
 
     pub fn shell(&mut self) -> Result<IocShellService> {
-        let shell_channel = self.process.shell()?;
+        if let Some(ref mut shell_service) = self.shell {
+            Ok(shell_service.clone())
+        } else {
+            let shell_channel = self.process.shell()?;
+            let shell_service = IocShellService::new(shell_channel);
 
-        Ok(IocShellService::new(shell_channel))
+            self.shell = Some(shell_service.clone());
+
+            Ok(shell_service)
+        }
     }
 
     pub fn kill(&mut self) {
