@@ -5,7 +5,7 @@ use futures::{Async, Future, Poll};
 use futures::future::JoinAll;
 use tokio_service::Service;
 
-use super::errors::{Error, ErrorKind, Result};
+use super::errors::{Error, Result};
 use super::ioc_shell_variable_verifier::IocShellVariableVerifier;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_variable_action::IocTestVariableAction;
@@ -20,19 +20,23 @@ where
     P: IocTestParameters,
     P::ServiceError: Into<async_server::Error>,
 {
-    server: AsyncServer<P::Protocol, P::ServiceFactory>,
-    ioc: IocInstance,
-    service:
+    server: Option<AsyncServer<P::Protocol, P::ServiceFactory>>,
+    ioc: Option<IocInstance>,
+    service: Option<
         InstrumentingService<IocShellService, IocShellVariableVerifier, Error>,
-    commands: JoinAll<
-        Vec<
-            InstrumentedResponse<
-                IocShellCommandOutput,
-                IocShellVariableVerifier,
-                Error,
+    >,
+    commands: Option<
+        JoinAll<
+            Vec<
+                InstrumentedResponse<
+                    IocShellCommandOutput,
+                    IocShellVariableVerifier,
+                    Error,
+                >,
             >,
         >,
     >,
+    error: Option<Error>,
 }
 
 impl<P> IocTestExecution<P>
@@ -57,50 +61,123 @@ where
         let commands = future::join_all(command_futures);
 
         Ok(Self {
-            ioc,
-            server,
-            service,
-            commands,
+            ioc: Some(ioc),
+            server: Some(server),
+            service: Some(service),
+            commands: Some(commands),
+            error: None,
         })
     }
 
-    fn poll_ioc(&mut self) -> Poll<(), Error> {
-        let poll_result = self.ioc.poll();
+    fn poll_slot<F>(slot: &mut Option<F>, error_slot: &mut Option<Error>)
+    where
+        F: Future,
+        F::Error: Into<Error>,
+    {
+        if error_slot.is_none() {
+            if let Some(mut future) = slot.take() {
+                let poll_result = future.poll();
 
-        match poll_result {
-            Ok(Async::Ready(_)) => self.ensure_ioc_service_finished(),
-            Ok(Async::NotReady) => self.poll_ioc_commands(),
-            Err(error) => Err(error.into()),
+                match poll_result {
+                    Ok(Async::Ready(_)) => {},
+                    Ok(Async::NotReady) => *slot = Some(future),
+                    Err(error) => *error_slot = Some(error.into()),
+                }
+            }
         }
     }
 
-    fn poll_ioc_commands(&mut self) -> Poll<(), Error> {
-        match self.commands.poll() {
-            Ok(_) => Ok(Async::NotReady),
-            Err(error) => Err(error.into()),
+    fn poll_server(&mut self) -> &mut Self {
+        Self::poll_slot(&mut self.server, &mut self.error);
+
+        self
+    }
+
+    fn poll_ioc_commands(&mut self) -> &mut Self {
+        let mut command_error_slot = None;
+
+        Self::poll_slot(&mut self.commands, &mut command_error_slot);
+
+        if let Some(error) = command_error_slot {
+            self.poll_ioc();
+
+            if self.ioc.is_some() && self.error.is_none() {
+                self.error = Some(error);
+            }
+        }
+
+        self
+    }
+
+    fn poll_ioc_service(&mut self) -> &mut Self {
+        if self.error.is_none() {
+            if let Some(ioc_service) = self.service.take() {
+                match ioc_service.has_finished() {
+                    Ok(true) => {},
+                    Ok(false) => self.service = Some(ioc_service),
+                    Err(error) => self.error = Some(error),
+                }
+            }
+        }
+
+        self
+    }
+
+    fn poll_ioc(&mut self) -> &mut Self {
+        Self::poll_slot(&mut self.ioc, &mut self.error);
+
+        self
+    }
+
+    fn get_poll_result(&mut self) -> Poll<(), Error> {
+        self.clean_poll_status();
+
+        if let Some(error) = self.error.take() {
+            Err(error)
+        } else {
+            match (&self.ioc, &self.server) {
+                (&None, &None) => Ok(Async::Ready(())),
+                _ => Ok(Async::NotReady),
+            }
         }
     }
 
-    fn stop_ioc(&mut self) -> Poll<(), Error> {
-        self.ioc.kill_after(Duration::from_secs(5));
-        self.ioc.exit()?;
-
-        self.poll_ioc()
-    }
-
-    fn poll_ioc_service(&mut self) -> Poll<(), Error> {
-        match self.service.has_finished() {
-            Ok(true) => Ok(Async::Ready(())),
-            Ok(false) => Ok(Async::NotReady),
-            Err(error) => Err(error.into()),
+    fn clean_poll_status(&mut self) {
+        if self.ioc.is_none() {
+            self.stop_service();
+            self.stop_server();
+        } else if self.server.is_none() {
+            self.stop_ioc();
         }
     }
 
-    fn ensure_ioc_service_finished(&mut self) -> Poll<(), Error> {
-        match self.service.has_finished() {
-            Ok(true) => Ok(self.server.shutdown()?),
-            Ok(false) => Err(ErrorKind::IncompleteIocShellVerification.into()),
-            Err(error) => Err(error.into()),
+    fn stop_ioc(&mut self) {
+        if let Some(ref mut ioc) = self.ioc {
+            ioc.kill_after(Duration::from_secs(5));
+            ioc.exit();
+        }
+    }
+
+    fn stop_server(&mut self) {
+        if self.error.is_none() {
+            if let Some(mut server) = self.server.take() {
+                match server.shutdown() {
+                    Ok(Async::Ready(_)) => {},
+                    Ok(Async::NotReady) => self.server = Some(server),
+                    Err(error) => self.error = Some(error.into()),
+                }
+            }
+        }
+    }
+
+    fn stop_service(&mut self) {
+        if self.error.is_none() {
+            if let Some(ref mut service) = self.service {
+                match service.force_stop() {
+                    Ok(_) => {},
+                    Err(error) => self.error = Some(error),
+                }
+            }
         }
     }
 }
@@ -113,14 +190,10 @@ where
     type Error = Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        self.poll_ioc_service()?;
-
-        let poll_result = self.server.poll();
-
-        match poll_result {
-            Ok(Async::Ready(_)) => self.stop_ioc(),
-            Ok(Async::NotReady) => self.poll_ioc(),
-            Err(error) => Err(error.into()),
-        }
+        self.poll_server()
+            .poll_ioc_commands()
+            .poll_ioc_service()
+            .poll_ioc()
+            .get_poll_result()
     }
 }
