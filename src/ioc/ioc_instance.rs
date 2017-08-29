@@ -4,15 +4,19 @@ use std::time::{Duration, Instant};
 
 use futures::{Async, Future, Poll};
 use tokio_core::reactor::Timeout;
+use tokio_service::Service;
 
 use super::errors::{Error, ErrorKind, Result};
 use super::ioc_process::IocProcess;
+use super::ioc_shell_command::IocShellCommand;
+use super::ioc_shell_command_output::IocShellCommandOutput;
 use super::ioc_shell_service::IocShellService;
 
 pub struct IocInstance {
     process: IocProcess,
     shell: Option<IocShellService>,
     timeout: Option<(io::Result<Timeout>, Instant)>,
+    exit_command: Option<IocShellCommandOutput>,
     error: Option<Error>,
 }
 
@@ -22,6 +26,7 @@ impl IocInstance {
             process,
             shell: None,
             timeout: None,
+            exit_command: None,
             error: None,
         })
     }
@@ -37,6 +42,14 @@ impl IocInstance {
 
             Ok(shell_service)
         }
+    }
+
+    pub fn exit(&mut self) -> Result<()> {
+        let shell_service = self.shell()?;
+
+        self.exit_command = Some(shell_service.call(IocShellCommand::Exit));
+
+        Ok(())
     }
 
     pub fn kill(&mut self) {
@@ -87,6 +100,14 @@ impl IocInstance {
 
         (poll_result, Ok(timeout))
     }
+
+    fn poll_exit_command(&mut self) -> Result<()> {
+        if let Some(ref mut exit_command) = self.exit_command {
+            exit_command.poll()?;
+        }
+
+        Ok(())
+    }
 }
 
 impl Future for IocInstance {
@@ -108,6 +129,11 @@ impl Future for IocInstance {
         };
 
         let _temporary_error = mem::replace(&mut self.error, new_error_status);
+
+        match poll_result {
+            Ok(Async::NotReady) => self.poll_exit_command()?,
+            _ => (),
+        };
 
         poll_result
     }
