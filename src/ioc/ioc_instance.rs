@@ -44,12 +44,19 @@ impl IocInstance {
         }
     }
 
-    pub fn exit(&mut self) -> Result<()> {
-        let shell_service = self.shell()?;
+    pub fn exit(&mut self) {
+        match self.shell() {
+            Ok(shell_service) => {
+                let command = shell_service.call(IocShellCommand::Exit);
 
-        self.exit_command = Some(shell_service.call(IocShellCommand::Exit));
-
-        Ok(())
+                self.exit_command = Some(command);
+            }
+            Err(error) => {
+                if self.error.is_none() {
+                    self.error = Some(error);
+                }
+            }
+        }
     }
 
     pub fn kill(&mut self) {
