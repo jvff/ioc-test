@@ -1,3 +1,5 @@
+#![recursion_limit="128"]
+
 extern crate bytes;
 #[macro_use]
 extern crate futures;

@@ -1,4 +1,5 @@
 mod channel;
+mod epics_data_type;
 mod errors;
 mod ioc_spawn;
 mod ioc_process;
@@ -11,6 +12,7 @@ mod ioc_shell_service;
 mod ioc_shell_service_scheduler;
 mod ioc_variable_command;
 
+pub use self::epics_data_type::EpicsDataType;
 pub use self::errors::{Error, ErrorKind};
 pub use self::ioc_instance::IocInstance;
 pub use self::ioc_process::IocProcess;

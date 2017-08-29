@@ -59,5 +59,19 @@ error_chain! {
             description("IOC shell command output future polled after it had \
                          already returned an error")
         }
+
+        MissingEpicsDataParameter {
+            description("data value is missing for EPICS data type")
+        }
+
+        UnknownEpicsDataType(data_type: String) {
+            description("unknown EPICS data type")
+            display("unknown EPICS data type: {}", data_type)
+        }
+
+        InvalidEpicsDataString(string: String) {
+            description("invalid EPICS data type string")
+            display("invalid EPICS data type string: {}", string)
+        }
     }
 }
