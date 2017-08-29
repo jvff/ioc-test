@@ -79,7 +79,7 @@ where
                 let poll_result = future.poll();
 
                 match poll_result {
-                    Ok(Async::Ready(_)) => {},
+                    Ok(Async::Ready(_)) => {}
                     Ok(Async::NotReady) => *slot = Some(future),
                     Err(error) => *error_slot = Some(error.into()),
                 }
@@ -113,7 +113,7 @@ where
         if self.error.is_none() {
             if let Some(ioc_service) = self.service.take() {
                 match ioc_service.has_finished() {
-                    Ok(true) => {},
+                    Ok(true) => {}
                     Ok(false) => self.service = Some(ioc_service),
                     Err(error) => self.error = Some(error),
                 }
@@ -163,7 +163,7 @@ where
         if self.error.is_none() {
             if let Some(mut server) = self.server.take() {
                 match server.shutdown() {
-                    Ok(Async::Ready(_)) => {},
+                    Ok(Async::Ready(_)) => {}
                     Ok(Async::NotReady) => self.server = Some(server),
                     Err(error) => self.error = Some(error.into()),
                 }
@@ -175,7 +175,7 @@ where
         if self.error.is_none() {
             if let Some(ref mut service) = self.service {
                 match service.force_stop() {
-                    Ok(_) => {},
+                    Ok(_) => {}
                     Err(error) => self.error = Some(error),
                 }
             }

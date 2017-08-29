@@ -43,11 +43,9 @@ pub fn decode(message: &str) -> Option<ScpiDisplaySubsystem> {
             };
 
             if let Some(command) = decoded_command {
-                return Some(
-                    ScpiDisplaySubsystem::Window(
-                        ScpiDisplayWindow { window, command },
-                    ),
-                );
+                return Some(ScpiDisplaySubsystem::Window(
+                    ScpiDisplayWindow { window, command },
+                ));
             }
         }
     }
