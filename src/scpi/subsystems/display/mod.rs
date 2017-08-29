@@ -49,6 +49,7 @@ impl ScpiRequest for ScpiDisplaySubsystem {
 
 pub type Subsystem = ScpiDisplaySubsystem;
 
+#[derive(Clone, Copy)]
 pub struct Builder;
 
 pub fn builder() -> Builder {

@@ -134,6 +134,7 @@ pub fn decode_source_message(string: &str) -> Option<ScpiSourceSubsystem> {
 
 pub type Subsystem = ScpiSourceSubsystem;
 
+#[derive(Clone, Copy)]
 pub struct Builder {
     source: usize,
 }

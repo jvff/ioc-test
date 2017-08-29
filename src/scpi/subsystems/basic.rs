@@ -29,6 +29,7 @@ impl ScpiRequest for ScpiBasicSubsystem {
 
 pub type Subsystem = ScpiBasicSubsystem;
 
+#[derive(Clone, Copy)]
 pub struct Builder;
 
 pub fn builder() -> Builder {

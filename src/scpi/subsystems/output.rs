@@ -77,6 +77,7 @@ pub fn decode_output_message(message: &str) -> Option<ScpiOutputSubsystem> {
 
 pub type Subsystem = ScpiOutputSubsystem;
 
+#[derive(Clone, Copy)]
 pub struct Builder {
     channel: usize,
 }

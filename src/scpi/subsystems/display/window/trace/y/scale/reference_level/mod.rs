@@ -17,6 +17,7 @@ pub fn decode(message: &str) -> Option<TraceCommand> {
     None
 }
 
+#[derive(Clone, Copy)]
 pub struct Builder {
     window: usize,
     trace: usize,

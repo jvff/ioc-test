@@ -55,6 +55,7 @@ pub fn decode(message: &str) -> Option<ScpiDisplaySubsystem> {
     None
 }
 
+#[derive(Clone, Copy)]
 pub struct Builder {
     window: usize,
 }
