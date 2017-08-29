@@ -7,6 +7,7 @@ use super::ioc_variable_command::IocVariableCommand;
 pub enum IocShellCommand {
     DbGetField(String),
     DbPutField(String, String),
+    Exit,
 }
 
 impl From<IocVariableCommand> for IocShellCommand {
@@ -29,6 +30,7 @@ impl Display for IocShellCommand {
             IocShellCommand::DbPutField(ref name, ref value) => {
                 write!(formatter, "dbpf {} {}", name, value)
             }
+            IocShellCommand::Exit => write!(formatter, "exit"),
         }
     }
 }
