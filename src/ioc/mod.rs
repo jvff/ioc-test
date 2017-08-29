@@ -8,8 +8,10 @@ mod ioc_shell_channel;
 mod ioc_shell_codec;
 mod ioc_shell_command;
 mod ioc_shell_command_output;
+mod ioc_shell_command_variable_result;
 mod ioc_shell_service;
 mod ioc_shell_service_scheduler;
+mod ioc_shell_variable_service;
 mod ioc_variable_command;
 
 pub use self::epics_data_type::EpicsDataType;
@@ -18,5 +20,7 @@ pub use self::ioc_instance::IocInstance;
 pub use self::ioc_process::IocProcess;
 pub use self::ioc_shell_command::IocShellCommand;
 pub use self::ioc_shell_command_output::IocShellCommandOutput;
+pub use self::ioc_shell_command_variable_result::IocShellCommandVariableResult;
 pub use self::ioc_shell_service::IocShellService;
+pub use self::ioc_shell_variable_service::IocShellVariableService;
 pub use self::ioc_spawn::IocSpawn;
