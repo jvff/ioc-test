@@ -23,14 +23,8 @@ impl Encoder for IocShellCodec {
         item: Self::Item,
         buffer: &mut BytesMut,
     ) -> Result<()> {
-        match item {
-            IocShellCommand::DbGetField(name) => {
-                buffer.extend(format!("dbgf {}\n", name).as_bytes())
-            }
-            IocShellCommand::DbPutField(name, value) => {
-                buffer.extend(format!("dbpf {} {}\n", name, value).as_bytes())
-            }
-        };
+        buffer.extend(item.to_string().as_bytes());
+        buffer.extend("\n".as_bytes());
 
         Ok(())
     }
