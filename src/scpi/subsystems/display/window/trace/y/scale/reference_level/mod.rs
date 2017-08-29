@@ -8,6 +8,10 @@ pub fn decode(message: &str) -> Option<TraceCommand> {
 
     if command.starts_with("?") {
         return Some(TraceCommand::GetYScaleReferenceLevel);
+    } else if command.starts_with(" ") {
+        if let Ok(level) = command.trim().parse() {
+            return Some(TraceCommand::SetYScaleReferenceLevel(level));
+        }
     }
 
     None
@@ -27,6 +31,20 @@ impl Builder {
         let trace = ScpiDisplayTrace {
             trace: self.trace,
             command: TraceCommand::GetYScaleReferenceLevel,
+        };
+
+        let window = ScpiDisplayWindow {
+            window: self.window,
+            command: WindowCommand::Trace(trace),
+        };
+
+        ScpiDisplaySubsystem::Window(window)
+    }
+
+    pub fn set(self, value: isize) -> ScpiDisplaySubsystem {
+        let trace = ScpiDisplayTrace {
+            trace: self.trace,
+            command: TraceCommand::SetYScaleReferenceLevel(value),
         };
 
         let window = ScpiDisplayWindow {

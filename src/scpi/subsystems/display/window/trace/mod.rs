@@ -15,6 +15,7 @@ pub struct ScpiDisplayTrace {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum TraceCommand {
     GetYScaleReferenceLevel,
+    SetYScaleReferenceLevel(isize),
 }
 
 impl Display for ScpiDisplayTrace {
@@ -24,6 +25,9 @@ impl Display for ScpiDisplayTrace {
         match self.command {
             TraceCommand::GetYScaleReferenceLevel => {
                 write!(formatter, "TRAC{}:Y:SCAL:RLEV?", trace)
+            }
+            TraceCommand::SetYScaleReferenceLevel(value) => {
+                write!(formatter, "TRAC{}:Y:SCAL:RLEV {}", trace, value)
             }
         }
     }
