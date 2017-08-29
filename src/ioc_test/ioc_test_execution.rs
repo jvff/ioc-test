@@ -81,8 +81,9 @@ where
         }
     }
 
-    fn kill_ioc(&mut self) -> Poll<(), Error> {
+    fn stop_ioc(&mut self) -> Poll<(), Error> {
         self.ioc.kill_after(Duration::from_secs(5));
+        self.ioc.exit()?;
 
         self.poll_ioc()
     }
@@ -117,7 +118,7 @@ where
         let poll_result = self.server.poll();
 
         match poll_result {
-            Ok(Async::Ready(_)) => self.kill_ioc(),
+            Ok(Async::Ready(_)) => self.stop_ioc(),
             Ok(Async::NotReady) => self.poll_ioc(),
             Err(error) => Err(error.into()),
         }
