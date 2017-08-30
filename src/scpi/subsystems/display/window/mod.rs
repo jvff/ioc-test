@@ -33,20 +33,23 @@ impl Display for ScpiDisplayWindow {
 pub fn decode(message: &str) -> Option<ScpiDisplaySubsystem> {
     let request_data = message.skip_expected_chars("WINDow");
 
-    if let Some((window, command)) = request_data.parse_integer() {
-        if command.starts_with(":") {
-            let command = command.skip_chars(1);
+    let (window, command) = match request_data.parse_integer() {
+        Some((window, command)) => (window, command),
+        None => (1, request_data),
+    };
 
-            let decoded_command = match command.view_first_chars(4) {
-                "TRAC" => trace::decode(command),
-                _ => None,
-            };
+    if command.starts_with(":") {
+        let command = command.skip_chars(1);
 
-            if let Some(command) = decoded_command {
-                return Some(ScpiDisplaySubsystem::Window(
-                    ScpiDisplayWindow { window, command },
-                ));
-            }
+        let decoded_command = match command.view_first_chars(4) {
+            "TRAC" => trace::decode(command),
+            _ => None,
+        };
+
+        if let Some(command) = decoded_command {
+            return Some(ScpiDisplaySubsystem::Window(
+                ScpiDisplayWindow { window, command },
+            ));
         }
     }
 
