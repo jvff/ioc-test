@@ -21,6 +21,6 @@ impl Future for IocShellCommandVariableResult {
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         let string = try_ready!(self.output.poll());
 
-        Ok(Async::Ready(EpicsDataType::from(string)?))
+        Ok(Async::Ready(string.parse()?))
     }
 }

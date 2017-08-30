@@ -1,5 +1,6 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use std::str::FromStr;
 
 use super::errors::{Error, ErrorKind, Result};
 
@@ -10,11 +11,45 @@ pub enum EpicsDataType {
 }
 
 impl EpicsDataType {
-    pub fn from<S>(string: S) -> Result<EpicsDataType>
+    pub fn dbr_double_from<S>(string: S) -> Result<EpicsDataType>
     where
         S: AsRef<str>,
     {
-        let string = string.as_ref().trim();
+        Ok(EpicsDataType::DbrDouble(string.as_ref().parse()?))
+    }
+
+    pub fn dbr_string_from<S>(string: S) -> EpicsDataType
+    where
+        S: AsRef<str>,
+    {
+        let mut string = string.as_ref().trim().to_string();
+
+        if string.starts_with("\"") && string.ends_with("\"") {
+            let length = string.len();
+
+            string = string[1..length - 1]
+                .replace("\\n", "\n")
+                .replace("\\r", "\r")
+                .replace("\\t", "\t")
+                .replace("\\\\", "\\");
+        }
+
+        EpicsDataType::DbrString(string)
+    }
+
+    pub fn type_name(&self) -> &'static str {
+        match *self {
+            EpicsDataType::DbrDouble(_) => "DBR_DOUBLE",
+            EpicsDataType::DbrString(_) => "DBR_STRING",
+        }
+    }
+}
+
+impl FromStr for EpicsDataType {
+    type Err = Error;
+
+    fn from_str(string: &str) -> Result<EpicsDataType> {
+        let string = string.trim();
 
         if string.starts_with("DBR_") {
             let mut parts = string.split_whitespace();
@@ -48,39 +83,6 @@ impl EpicsDataType {
 
         } else {
             Err(ErrorKind::InvalidEpicsDataString(string.to_string()).into())
-        }
-    }
-
-    pub fn dbr_double_from<S>(string: S) -> Result<EpicsDataType>
-    where
-        S: AsRef<str>,
-    {
-        Ok(EpicsDataType::DbrDouble(string.as_ref().parse()?))
-    }
-
-    pub fn dbr_string_from<S>(string: S) -> EpicsDataType
-    where
-        S: AsRef<str>,
-    {
-        let mut string = string.as_ref().trim().to_string();
-
-        if string.starts_with("\"") && string.ends_with("\"") {
-            let length = string.len();
-
-            string = string[1..length - 1]
-                .replace("\\n", "\n")
-                .replace("\\r", "\r")
-                .replace("\\t", "\t")
-                .replace("\\\\", "\\");
-        }
-
-        EpicsDataType::DbrString(string)
-    }
-
-    pub fn type_name(&self) -> &'static str {
-        match *self {
-            EpicsDataType::DbrDouble(_) => "DBR_DOUBLE",
-            EpicsDataType::DbrString(_) => "DBR_STRING",
         }
     }
 }
