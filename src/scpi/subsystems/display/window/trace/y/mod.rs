@@ -10,6 +10,7 @@ pub fn decode(message: &str) -> Option<TraceCommand> {
         let command = command.skip_chars(1);
 
         return match command.view_first_chars(4) {
+            "RLEV" => scale::reference_level::decode(command),
             "SCAL" => scale::decode(command),
             _ => None,
         };

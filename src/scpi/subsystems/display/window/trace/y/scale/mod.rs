@@ -1,4 +1,4 @@
-mod reference_level;
+pub mod reference_level;
 
 use scpi::str_extensions::StrExtensions;
 use super::super::TraceCommand;
