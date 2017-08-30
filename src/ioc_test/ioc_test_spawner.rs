@@ -2,31 +2,32 @@ use std::ops::Range;
 
 use tokio_core::reactor::Handle;
 
+use super::ioc_test_configurator::IocTestConfigurator;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_setup::IocTestSetup;
 use super::super::test::test_spawner::TestSpawner;
 
-pub struct IocTestSpawner<P, F>
+pub struct IocTestSpawner<P, C>
 where
     P: IocTestParameters,
-    F: Fn(&mut IocTestSetup<P>),
+    C: IocTestConfigurator<P>,
 {
     handle: Handle,
     ioc_command: String,
     ports: Range<u16>,
-    setup: F,
+    configurator: C,
     test_parameters: P,
 }
 
-impl<P, F> IocTestSpawner<P, F>
+impl<P, C> IocTestSpawner<P, C>
 where
     P: IocTestParameters,
-    F: Fn(&mut IocTestSetup<P>),
+    C: IocTestConfigurator<P>,
 {
     pub fn new(
         ioc_command: &str,
         handle: Handle,
-        setup: F,
+        configurator: C,
         test_parameters: P,
     ) -> Self {
         let ports = 55000..60000;
@@ -34,17 +35,17 @@ where
         Self {
             handle,
             ports,
-            setup,
+            configurator,
             test_parameters,
             ioc_command: String::from(ioc_command),
         }
     }
 }
 
-impl<P, F> TestSpawner for IocTestSpawner<P, F>
+impl<P, C> TestSpawner for IocTestSpawner<P, C>
 where
     P: IocTestParameters + Clone,
-    F: Fn(&mut IocTestSetup<P>),
+    C: IocTestConfigurator<P>,
 {
     type TestSetup = IocTestSetup<P>;
 
@@ -64,7 +65,7 @@ where
         );
         let mut test = test.unwrap();
 
-        (self.setup)(&mut test);
+        self.configurator.configure(&mut test);
 
         test
     }
