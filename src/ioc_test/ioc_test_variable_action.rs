@@ -1,4 +1,4 @@
-use super::super::ioc::IocShellCommand;
+use super::super::ioc::{EpicsDataType, IocShellCommand};
 
 #[derive(Clone)]
 pub enum IocTestVariableAction {
@@ -25,5 +25,14 @@ impl IocTestVariableAction {
         };
 
         format!("DBR_STRING:          \"{}\"", value)
+    }
+
+    pub fn expected_variable_value(&self) -> EpicsDataType {
+        let value = match *self {
+            IocTestVariableAction::Set(_, ref value) => value,
+            IocTestVariableAction::Check(_, ref value) => value,
+        };
+
+        EpicsDataType::DbrString(value.clone())
     }
 }
