@@ -148,6 +148,7 @@ where
             self.stop_server();
         } else if self.server.is_none() {
             self.stop_ioc();
+            self.poll_ioc();
         }
     }
 
