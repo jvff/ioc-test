@@ -2,15 +2,15 @@ use super::super::ioc::{EpicsDataType, IocShellCommand};
 
 #[derive(Clone)]
 pub enum IocTestVariableAction {
-    Set(String, String),
-    Check(String, String),
+    Set(String, EpicsDataType),
+    Check(String, EpicsDataType),
 }
 
 impl IocTestVariableAction {
     pub fn ioc_shell_command(&self) -> IocShellCommand {
         match *self {
             IocTestVariableAction::Set(ref name, ref value) => {
-                IocShellCommand::DbPutField(name.clone(), value.clone())
+                IocShellCommand::DbPutField(name.clone(), value.to_string())
             }
             IocTestVariableAction::Check(ref name, _) => {
                 IocShellCommand::DbGetField(name.clone())
@@ -24,15 +24,13 @@ impl IocTestVariableAction {
             IocTestVariableAction::Check(_, ref value) => value,
         };
 
-        format!("DBR_STRING:          \"{}\"", value)
+        format!("{}:          {}", value.type_name(), value)
     }
 
     pub fn expected_variable_value(&self) -> EpicsDataType {
-        let value = match *self {
-            IocTestVariableAction::Set(_, ref value) => value,
-            IocTestVariableAction::Check(_, ref value) => value,
-        };
-
-        EpicsDataType::DbrString(value.clone())
+        match *self {
+            IocTestVariableAction::Set(_, ref value) => value.clone(),
+            IocTestVariableAction::Check(_, ref value) => value.clone(),
+        }
     }
 }

@@ -11,7 +11,7 @@ use super::ioc_test_variable_action::IocTestVariableAction;
 use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::{When, WhenVerifier};
 use super::super::instrumenting_service::verifiers::VerifyAll;
-use super::super::ioc::IocSpawn;
+use super::super::ioc::{EpicsDataType, IocSpawn};
 use super::super::async_server::StartServer;
 use super::super::test::test::IntoTest;
 
@@ -75,17 +75,23 @@ where
         When::with_action(request.into(), action)
     }
 
-    pub fn check_variable(&mut self, name: &str, value: &str) {
+    pub fn check_variable<V>(&mut self, name: &str, value: V)
+    where
+        V: Into<EpicsDataType>,
+    {
         let name = String::from(name);
-        let value = String::from(value);
+        let value = value.into();
 
         self.variable_actions
             .push(IocTestVariableAction::Check(name, value));
     }
 
-    pub fn set_variable(&mut self, name: &str, value: &str) {
+    pub fn set_variable<V>(&mut self, name: &str, value: V)
+    where
+        V: Into<EpicsDataType>,
+    {
         let name = String::from(name);
-        let value = String::from(value);
+        let value = value.into();
 
         self.variable_actions
             .push(IocTestVariableAction::Set(name, value));
