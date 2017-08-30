@@ -15,7 +15,7 @@ pub struct ScpiDisplayTrace {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum TraceCommand {
     GetYScaleReferenceLevel,
-    SetYScaleReferenceLevel(isize),
+    SetYScaleReferenceLevel(f64),
 }
 
 impl Display for ScpiDisplayTrace {
