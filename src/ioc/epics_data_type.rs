@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::{Display, Formatter};
+
 use super::errors::{Error, ErrorKind, Result};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -64,5 +67,15 @@ impl EpicsDataType {
         }
 
         EpicsDataType::DbrString(string)
+    }
+}
+
+impl Display for EpicsDataType {
+    fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
+        match *self {
+            EpicsDataType::DbrString(ref value) => {
+                write!(formatter, "{:?}", value)
+            }
+        }
     }
 }
