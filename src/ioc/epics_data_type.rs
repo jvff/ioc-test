@@ -76,6 +76,13 @@ impl EpicsDataType {
 
         EpicsDataType::DbrString(string)
     }
+
+    pub fn type_name(&self) -> &'static str {
+        match *self {
+            EpicsDataType::DbrDouble(_) => "DBR_DOUBLE",
+            EpicsDataType::DbrString(_) => "DBR_STRING",
+        }
+    }
 }
 
 impl Display for EpicsDataType {
