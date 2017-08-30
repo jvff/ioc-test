@@ -1,37 +1,35 @@
+use std::fmt::Display;
+
 use futures::{Async, Future, Poll, Stream};
 use termion::color::{Fg, Green, Red, Yellow};
 use termion::style::{Bold, Reset};
 
-use super::test::{IntoTest, Test};
 use super::test_result::TestResult;
-use super::test_scheduler::TestScheduler;
-use super::test_spawner::TestSpawner;
 
-pub struct TestReporter<S>
+pub struct TestReporter<S, E>
 where
-    S: TestSpawner,
+    S: Stream<Item = TestResult<E>>,
+    E: Display,
 {
     successful_tests: usize,
     failed_tests: usize,
-    scheduler: TestScheduler<S>,
+    test_results: S,
 }
 
-impl<S> TestReporter<S>
+impl<S, E> TestReporter<S, E>
 where
-    S: TestSpawner,
+    S: Stream<Item = TestResult<E>>,
+    E: Display,
 {
-    pub fn new(scheduler: TestScheduler<S>) -> Self {
+    pub fn new(test_results: S) -> Self {
         TestReporter {
             successful_tests: 0,
             failed_tests: 0,
-            scheduler,
+            test_results,
         }
     }
 
-    fn report(
-        &mut self,
-        result: TestResult<<<S::TestSetup as IntoTest>::Test as Test>::Error>,
-){
+    fn report(&mut self, result: TestResult<E>) {
         match result {
             Ok(_) => self.successful_tests += 1,
             Err((ref test, ref error)) => {
@@ -50,7 +48,7 @@ where
         }
     }
 
-    fn report_summary(&self) -> Poll<(), ()> {
+    fn report_summary(&self) -> Poll<(), S::Error> {
         if self.failed_tests > 0 {
             println!("");
         }
@@ -93,20 +91,21 @@ where
     }
 }
 
-impl<S> Future for TestReporter<S>
+impl<S, E> Future for TestReporter<S, E>
 where
-    S: TestSpawner,
+    S: Stream<Item = TestResult<E>>,
+    E: Display,
 {
     type Item = ();
-    type Error = ();
+    type Error = S::Error;
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        let mut poll_result = self.scheduler.poll();
+        let mut poll_result = self.test_results.poll();
 
         while let Ok(Async::Ready(Some(result))) = poll_result {
             self.report(result);
 
-            poll_result = self.scheduler.poll();
+            poll_result = self.test_results.poll();
         }
 
         match poll_result {
@@ -117,7 +116,7 @@ where
             }
             Ok(Async::Ready(None)) => self.report_summary(),
             Ok(Async::NotReady) => Ok(Async::NotReady),
-            Err(()) => Err(()),
+            Err(error) => Err(error),
         }
     }
 }
