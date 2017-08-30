@@ -85,6 +85,18 @@ impl EpicsDataType {
     }
 }
 
+impl<'a> From<&'a str> for EpicsDataType {
+    fn from(string: &'a str) -> EpicsDataType {
+        EpicsDataType::DbrString(string.to_string())
+    }
+}
+
+impl From<f64> for EpicsDataType {
+    fn from(double: f64) -> EpicsDataType {
+        EpicsDataType::DbrDouble(double.into())
+    }
+}
+
 impl Display for EpicsDataType {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         match *self {
