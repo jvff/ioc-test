@@ -1,5 +1,5 @@
 use super::errors::{Error, ErrorKind};
-use super::super::super::ioc::IocShellCommand;
+use super::super::super::ioc::{EpicsDataType, IocShellCommand};
 
 #[derive(Clone)]
 pub enum ErrorStatus {
@@ -8,8 +8,11 @@ pub enum ErrorStatus {
         received: IocShellCommand,
         expected: IocShellCommand,
     },
-    UnexpectedOutput(String),
-    IncorrectOutput { received: String, expected: String },
+    UnexpectedVariableValue(EpicsDataType),
+    IncorrectVariableValue {
+        received: EpicsDataType,
+        expected: EpicsDataType,
+    },
 }
 
 impl Into<Error> for ErrorStatus {
@@ -24,11 +27,11 @@ impl Into<Error> for ErrorStatus {
                     expected.clone(),
                 ).into()
             }
-            ErrorStatus::UnexpectedOutput(output) => {
-                ErrorKind::UnexpectedIocShellOutput(output).into()
+            ErrorStatus::UnexpectedVariableValue(value) => {
+                ErrorKind::UnexpectedIocShellVariableValue(value).into()
             }
-            ErrorStatus::IncorrectOutput { received, expected } => {
-                ErrorKind::IncorrectIocShellOutput(
+            ErrorStatus::IncorrectVariableValue { received, expected } => {
+                ErrorKind::IncorrectIocShellVariableValue(
                     received.clone(),
                     expected.clone(),
                 ).into()

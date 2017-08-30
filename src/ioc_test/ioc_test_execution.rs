@@ -11,7 +11,8 @@ use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_variable_action::IocTestVariableAction;
 use super::super::async_server;
 use super::super::async_server::{AsyncServer, FiniteService};
-use super::super::ioc::{IocInstance, IocShellCommandOutput, IocShellService};
+use super::super::ioc::{IocInstance, IocShellCommandVariableResult,
+                        IocShellVariableService};
 use super::super::instrumenting_service::{InstrumentedResponse,
                                           InstrumentingService};
 
@@ -23,13 +24,17 @@ where
     server: Option<AsyncServer<P::Protocol, P::ServiceFactory>>,
     ioc: Option<IocInstance>,
     service: Option<
-        InstrumentingService<IocShellService, IocShellVariableVerifier, Error>,
+        InstrumentingService<
+            IocShellVariableService,
+            IocShellVariableVerifier,
+            Error,
+        >,
     >,
     commands: Option<
         JoinAll<
             Vec<
                 InstrumentedResponse<
-                    IocShellCommandOutput,
+                    IocShellCommandVariableResult,
                     IocShellVariableVerifier,
                     Error,
                 >,
@@ -49,7 +54,7 @@ where
         variable_actions: Vec<IocTestVariableAction>,
     ) -> Result<Self> {
         let verifier = IocShellVariableVerifier::new(variable_actions.clone());
-        let ioc_service = ioc.shell()?;
+        let ioc_service = IocShellVariableService::from(ioc.shell()?);
         let service = InstrumentingService::new(ioc_service, verifier);
 
         let command_futures = variable_actions

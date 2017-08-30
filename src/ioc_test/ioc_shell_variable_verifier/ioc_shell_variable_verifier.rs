@@ -4,11 +4,11 @@ use super::error_status::ErrorStatus;
 use super::errors::{Error, ErrorKind};
 use super::super::ioc_test_variable_action::IocTestVariableAction;
 use super::super::super::instrumenting_service::verifiers::Verifier;
-use super::super::super::ioc::IocShellCommand;
+use super::super::super::ioc::{EpicsDataType, IocShellCommand};
 
 pub struct IocShellVariableVerifier {
     requests: VecDeque<IocShellCommand>,
-    responses: VecDeque<String>,
+    responses: VecDeque<EpicsDataType>,
     error: Option<ErrorStatus>,
 }
 
@@ -20,7 +20,7 @@ impl IocShellVariableVerifier {
 
         for action in actions {
             requests.push_back(action.ioc_shell_command());
-            responses.push_back(action.expected_output());
+            responses.push_back(action.expected_variable_value());
         }
 
         Self {
@@ -33,7 +33,7 @@ impl IocShellVariableVerifier {
 
 impl Verifier for IocShellVariableVerifier {
     type Request = IocShellCommand;
-    type Response = String;
+    type Response = EpicsDataType;
     type Error = Error;
 
     fn request(&mut self, request: &Self::Request) {
@@ -53,19 +53,18 @@ impl Verifier for IocShellVariableVerifier {
     }
 
     fn response(&mut self, response: &Self::Response) {
-        let response = response.trim();
-
         if self.error.is_none() {
             if let Some(expected_response) = self.responses.pop_front() {
                 if *response != expected_response {
-                    self.error = Some(ErrorStatus::IncorrectOutput {
-                        received: String::from(response),
+                    self.error = Some(ErrorStatus::IncorrectVariableValue {
+                        received: response.clone(),
                         expected: expected_response,
                     });
                 }
             } else {
-                self.error =
-                    Some(ErrorStatus::UnexpectedOutput(String::from(response)));
+                self.error = Some(
+                    ErrorStatus::UnexpectedVariableValue(response.clone()),
+                );
             }
         }
     }
@@ -82,15 +81,15 @@ impl Verifier for IocShellVariableVerifier {
         if let Some(ref error) = self.error {
             Err(error.clone().into())
         } else if !self.requests.is_empty() || !self.responses.is_empty() {
-            let unverified_outputs = self.responses.len();
+            let unverified_results = self.responses.len();
 
             if let Some(first_command) = self.requests.pop_front() {
                 let first_command = format!("{:?}", first_command);
                 let unverified_commands = self.requests.len() + 1;
-                let unverified_outputs_of_verified_commands =
-                    unverified_outputs as isize - unverified_commands as isize;
+                let unverified_results_of_verified_commands =
+                    unverified_results as isize - unverified_commands as isize;
 
-                if unverified_outputs_of_verified_commands <= 0 {
+                if unverified_results_of_verified_commands <= 0 {
                     Err(
                         ErrorKind::UnverifiedIocShellCommands(
                             first_command,
@@ -99,17 +98,18 @@ impl Verifier for IocShellVariableVerifier {
                     )
                 } else {
                     Err(
-                        ErrorKind::UnverifiedIocShellCommandsAndOutputs(
+                        ErrorKind::UnverifiedIocShellCommandsAndVariableValues(
                             first_command,
                             unverified_commands,
-                            unverified_outputs_of_verified_commands as usize,
+                            unverified_results_of_verified_commands as usize,
                         ).into(),
                     )
                 }
             } else {
                 Err(
-                    ErrorKind::UnverifiedIocShellOutputs(unverified_outputs)
-                        .into(),
+                    ErrorKind::UnverifiedIocShellVariableValues(
+                        unverified_results,
+                    ).into(),
                 )
             }
         } else {
