@@ -22,7 +22,7 @@ error_chain! {
 
         UnexpectedIocShellVariableValue(value: EpicsDataType) {
             description("received unexpected PV value from IOC shell")
-            display("received unexpected PV from IOC shell: \"{}\"", value)
+            display("received unexpected PV from IOC shell: {}", value)
         }
 
         IncorrectIocShellVariableValue(
@@ -31,8 +31,8 @@ error_chain! {
         ) {
             description("received incorrect IOC shell PV value")
             display(
-                "received incorrect IOC shell PV value: received \"{}\" but \
-                 expected \"{}\"",
+                "received incorrect IOC shell PV value: received {} but \
+                 expected {}",
                 received,
                 expected,
             )
@@ -44,7 +44,7 @@ error_chain! {
         ) {
             description("some expected IOC shell commands were not verified")
             display(
-                "{} IOC shell commands were not verified, starting at {}",
+                "{} IOC shell commands were not verified, starting at \"{}\"",
                 unverified_commands,
                 first_command,
             )
@@ -61,8 +61,8 @@ error_chain! {
                  values verified"
             )
             display(
-                "{} IOC shell commands were not verified, starting at {}, and \
-                 the resulting PV values of {} verified commands were not \
+                "{} IOC shell commands were not verified, starting at \"{}\", \
+                 and the resulting PV values of {} verified commands were not \
                  verified",
                 unverified_commands,
                 first_command,
