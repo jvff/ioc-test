@@ -3,6 +3,8 @@ mod y;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
+use ordered_float::OrderedFloat;
+
 use scpi::str_extensions::StrExtensions;
 use super::WindowCommand;
 
@@ -15,7 +17,7 @@ pub struct ScpiDisplayTrace {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum TraceCommand {
     GetYScaleReferenceLevel,
-    SetYScaleReferenceLevel(f64),
+    SetYScaleReferenceLevel(OrderedFloat<f64>),
 }
 
 impl Display for ScpiDisplayTrace {

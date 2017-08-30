@@ -9,8 +9,8 @@ pub fn decode(message: &str) -> Option<TraceCommand> {
     if command.starts_with("?") {
         return Some(TraceCommand::GetYScaleReferenceLevel);
     } else if command.starts_with(" ") {
-        if let Ok(level) = command.trim().parse() {
-            return Some(TraceCommand::SetYScaleReferenceLevel(level));
+        if let Ok(level) = command.trim().parse::<f64>() {
+            return Some(TraceCommand::SetYScaleReferenceLevel(level.into()));
         }
     }
 
@@ -42,10 +42,10 @@ impl Builder {
         ScpiDisplaySubsystem::Window(window)
     }
 
-    pub fn set(self, value: isize) -> ScpiDisplaySubsystem {
+    pub fn set(self, value: f64) -> ScpiDisplaySubsystem {
         let trace = ScpiDisplayTrace {
             trace: self.trace,
-            command: TraceCommand::SetYScaleReferenceLevel(value),
+            command: TraceCommand::SetYScaleReferenceLevel(value.into()),
         };
 
         let window = ScpiDisplayWindow {
