@@ -5,6 +5,7 @@ use super::errors::{Error, ErrorKind, Result};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum EpicsDataType {
+    DbrDouble(f64),
     DbrString(String),
 }
 
@@ -23,16 +24,16 @@ impl EpicsDataType {
                     data_type = &data_type[0..data_type.len() - 1];
                 }
 
-                match data_type {
-                    "DBR_STRING" => {
-                        let value = parts
-                            .next()
-                            .ok_or::<Error>(
-                                ErrorKind::MissingEpicsDataParameter.into(),
-                            )?;
+                let value =
+                    parts
+                        .next()
+                        .ok_or::<Error>(
+                            ErrorKind::MissingEpicsDataParameter.into(),
+                        )?;
 
-                        Ok(EpicsDataType::dbr_string_from(value))
-                    }
+                match data_type {
+                    "DBR_DOUBLE" => EpicsDataType::dbr_double_from(value),
+                    "DBR_STRING" => Ok(EpicsDataType::dbr_string_from(value)),
                     data_type => {
                         Err(
                             ErrorKind::UnknownEpicsDataType(
@@ -48,6 +49,13 @@ impl EpicsDataType {
         } else {
             Err(ErrorKind::InvalidEpicsDataString(string.to_string()).into())
         }
+    }
+
+    pub fn dbr_double_from<S>(string: S) -> Result<EpicsDataType>
+    where
+        S: AsRef<str>,
+    {
+        Ok(EpicsDataType::DbrDouble(string.as_ref().parse()?))
     }
 
     pub fn dbr_string_from<S>(string: S) -> EpicsDataType
@@ -76,6 +84,7 @@ impl Display for EpicsDataType {
             EpicsDataType::DbrString(ref value) => {
                 write!(formatter, "{:?}", value)
             }
+            EpicsDataType::DbrDouble(ref value) => value.fmt(formatter),
         }
     }
 }

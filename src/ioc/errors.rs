@@ -1,9 +1,11 @@
 use std::io;
+use std::num::ParseFloatError;
 
 use super::ioc_shell_codec;
 
 error_chain! {
     foreign_links {
+        ParseFloat(ParseFloatError);
         Io(io::Error);
     }
 
