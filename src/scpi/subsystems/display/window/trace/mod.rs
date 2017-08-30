@@ -36,20 +36,23 @@ impl Display for ScpiDisplayTrace {
 pub fn decode(message: &str) -> Option<WindowCommand> {
     let request_data = message.skip_expected_chars("TRACe");
 
-    if let Some((trace, command)) = request_data.parse_integer() {
-        if command.starts_with(":") {
-            let command = command.skip_chars(1);
+    let (trace, command) = match request_data.parse_integer() {
+        Some((trace, command)) => (trace, command),
+        None => (1, request_data),
+    };
 
-            let decoded_command = match command.view_first_chars(1) {
-                "Y" => y::decode(command),
-                _ => None,
-            };
+    if command.starts_with(":") {
+        let command = command.skip_chars(1);
 
-            if let Some(command) = decoded_command {
-                return Some(
-                    WindowCommand::Trace(ScpiDisplayTrace { trace, command }),
-                );
-            }
+        let decoded_command = match command.view_first_chars(1) {
+            "Y" => y::decode(command),
+            _ => None,
+        };
+
+        if let Some(command) = decoded_command {
+            return Some(
+                WindowCommand::Trace(ScpiDisplayTrace { trace, command }),
+            );
         }
     }
 
