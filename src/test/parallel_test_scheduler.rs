@@ -3,7 +3,7 @@ use super::test::{IntoTest, Test};
 use super::test_result::{TestResult, TestResultMethods};
 use super::test_spawner::TestSpawner;
 
-pub struct TestScheduler<S>
+pub struct ParallelTestScheduler<S>
 where
     S: TestSpawner,
 {
@@ -12,7 +12,7 @@ where
     test_executions: Vec<<S::TestSetup as IntoTest>::Test>,
 }
 
-impl<S> TestScheduler<S>
+impl<S> ParallelTestScheduler<S>
 where
     S: TestSpawner,
 {
@@ -82,7 +82,7 @@ where
     }
 }
 
-impl<S> Stream for TestScheduler<S>
+impl<S> Stream for ParallelTestScheduler<S>
 where
     S: TestSpawner,
 {
