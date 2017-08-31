@@ -1,40 +1,31 @@
 #[macro_export]
 macro_rules! tests {
     (
-        type Protocol = $protocol:ty;
+        generic type TestSetup < $($generic_parameter:ident),* $(,)* > =
+            $test_setup:path
+        where $($constrained:path : $constraint:path),* $(,)*;
         $( $test:ident ($name:expr) $body:tt )*
     ) => {
         mod tests {
-            use tokio_core::net::TcpStream;
-            use tokio_proto::pipeline::ServerProto;
-
-            use ioc_test::{IocTestParameters, IocTestSetup, TestScheduler,
-                           TestSpawner};
-
             use super::*;
 
-            pub fn add_tests<S, P>(scheduler: &mut TestScheduler<S>)
+            pub fn create_tests<$($generic_parameter),*>(
+            ) -> Vec<Box<FnMut(&mut $test_setup)>>
             where
-                P: IocTestParameters<
-                    Protocol = $protocol,
-                    Request = <$protocol as ServerProto<TcpStream>>::Request,
-                    Response = <$protocol as ServerProto<TcpStream>>::Response,
-                    ProtocolError =
-                        <$protocol as ServerProto<TcpStream>>::Error,
-                >,
-                P::ServiceError: From<
-                    <$protocol as ServerProto<TcpStream>>::Error
-                >,
-                S: TestSpawner<TestSetup = IocTestSetup<P>>,
+                $($constrained : $constraint),*
             {
-                $(scheduler.add(|mut $test| {
+                let mut tests: Vec<Box<FnMut(&mut $test_setup)>> = Vec::new();
+
+                $(tests.push(Box::new(|mut $test| {
                     $test.name($name);
                     $body
-                });)*
+                }));)*
+
+                tests
             }
         }
 
-        pub use self::tests::add_tests;
+        pub use self::tests::create_tests;
     }
 }
 
