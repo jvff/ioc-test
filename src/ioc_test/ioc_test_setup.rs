@@ -19,6 +19,7 @@ pub struct IocTestSetup<P>
 where
     P: IocTestParameters,
 {
+    prefix: Option<String>,
     name: String,
     handle: Handle,
     request_map: HashMap<P::Request, P::Response>,
@@ -55,11 +56,16 @@ where
             ioc_command: String::from(ioc_command),
             variable_actions: Vec::new(),
             name: String::from("Unnamed IOC test"),
+            prefix: None,
         })
     }
 
+    pub fn prefix(&mut self, prefix: &str) {
+        self.prefix = Some(prefix.to_string());
+    }
+
     pub fn name(&mut self, name: &str) {
-        self.name = String::from(name);
+        self.name = name.to_string();
     }
 
     pub fn when<A>(
@@ -124,6 +130,11 @@ where
             self.handle,
         );
 
-        IocTest::new(self.name, ioc, server, self.variable_actions)
+        let test_name = match self.prefix {
+            Some(prefix) => format!("{} {}", prefix, self.name),
+            None => self.name,
+        };
+
+        IocTest::new(test_name, ioc, server, self.variable_actions)
     }
 }
