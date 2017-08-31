@@ -31,6 +31,19 @@ where
         self.test_queue.push(test_setup.into());
     }
 
+    pub fn add_all<F, I>(&mut self, test_setup_functions: I)
+    where
+        F: Into<Box<FnMut(&mut S::TestSetup)>>,
+        I: IntoIterator<Item = F>,
+    {
+        let mut new_tests = test_setup_functions
+            .into_iter()
+            .map(|test| test.into())
+            .collect();
+
+        self.test_queue.append(&mut new_tests)
+    }
+
     fn start_queued_tests(&mut self) {
         for mut test_setup_function in self.test_queue.drain(0..) {
             let mut test_setup = self.spawner.spawn();
