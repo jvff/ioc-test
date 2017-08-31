@@ -15,11 +15,8 @@ extern crate error_chain;
 
 extern crate termion;
 
-#[macro_use]
 mod mock_service;
-
 mod proxy_service;
-
 mod instrumenting_service;
 
 mod async_server;
