@@ -26,9 +26,9 @@ where
 
     pub fn add<F>(&mut self, test_setup: F)
     where
-        F: FnMut(&mut S::TestSetup) + 'static,
+        F: Into<Box<FnMut(&mut S::TestSetup)>>,
     {
-        self.test_queue.push(Box::new(test_setup));
+        self.test_queue.push(test_setup.into());
     }
 
     fn start_queued_tests(&mut self) {
