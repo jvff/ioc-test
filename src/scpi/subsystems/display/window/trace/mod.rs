@@ -18,6 +18,7 @@ pub struct ScpiDisplayTrace {
 pub enum TraceCommand {
     GetYScaleReferenceLevel,
     SetYScaleReferenceLevel(OrderedFloat<f64>),
+    GetYScaleReferenceLevelOffset,
 }
 
 impl Display for ScpiDisplayTrace {
@@ -30,6 +31,9 @@ impl Display for ScpiDisplayTrace {
             }
             TraceCommand::SetYScaleReferenceLevel(value) => {
                 write!(formatter, "TRAC{}:Y:SCAL:RLEV {}", trace, value)
+            }
+            TraceCommand::GetYScaleReferenceLevelOffset => {
+                write!(formatter, "TRAC{}:Y:SCAL:RLEV:OFFS?", trace)
             }
         }
     }

@@ -1,3 +1,5 @@
+mod offset;
+
 use scpi::str_extensions::StrExtensions;
 use super::super::super::super::super::ScpiDisplaySubsystem;
 use super::super::super::super::{ScpiDisplayWindow, WindowCommand};
@@ -12,6 +14,13 @@ pub fn decode(message: &str) -> Option<TraceCommand> {
         if let Ok(level) = command.trim().parse::<f64>() {
             return Some(TraceCommand::SetYScaleReferenceLevel(level.into()));
         }
+    } else if command.starts_with(":") {
+        let command = command.skip_chars(1);
+
+        return match command.view_first_chars(4) {
+            "OFFS" => offset::decode(command),
+            _ => None,
+        };
     }
 
     None
@@ -54,5 +63,9 @@ impl Builder {
         };
 
         ScpiDisplaySubsystem::Window(window)
+    }
+
+    pub fn offset(self) -> offset::Builder {
+        offset::builder(self.window, self.trace)
     }
 }
