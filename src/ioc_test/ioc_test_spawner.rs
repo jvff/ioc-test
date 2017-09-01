@@ -26,12 +26,11 @@ where
 {
     pub fn new(
         ioc_command: &str,
+        ports: Range<u16>,
         handle: Handle,
         configurator: C,
         test_parameters: P,
     ) -> Self {
-        let ports = 55000..60000;
-
         Self {
             handle,
             ports,
