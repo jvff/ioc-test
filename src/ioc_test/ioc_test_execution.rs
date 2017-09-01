@@ -154,6 +154,10 @@ where
         } else if self.server.is_none() {
             self.stop_ioc();
             self.poll_ioc();
+
+            if self.ioc.is_none() {
+                self.stop_service();
+            }
         }
     }
 
