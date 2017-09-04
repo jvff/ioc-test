@@ -9,6 +9,8 @@ enum Status {
     WaitingForRequest,
     RequestVerified,
     Verified,
+    IncorrectRequest(String),
+    IncorrectResponse(String),
 }
 
 #[derive(Clone)]
@@ -41,6 +43,10 @@ where
         if self.status == Status::WaitingForRequest {
             if self.request == *request {
                 self.status = Status::RequestVerified;
+            } else {
+                let received_request = format!("{:?}", *request);
+
+                self.status = Status::IncorrectRequest(received_request);
             }
         }
     }
@@ -50,13 +56,39 @@ where
             if self.response == *response {
                 self.status = Status::Verified;
             } else {
-                self.status = Status::WaitingForRequest;
+                let received_response = format!("{:?}", *response);
+
+                self.status = Status::IncorrectResponse(received_response);
             }
         }
     }
 
     fn has_finished(&self) -> Result<bool, Self::Error> {
-        Ok(self.status == Status::Verified)
+        match self.status {
+            Status::WaitingForRequest => Ok(false),
+            Status::RequestVerified => Ok(false),
+            Status::Verified => Ok(true),
+            Status::IncorrectRequest(ref received_request) => {
+                let expected_request = format!("{:?}", self.request);
+
+                Err(
+                    ErrorKind::IncorrectRequest(
+                        received_request.clone(),
+                        expected_request,
+                    ).into(),
+                )
+            }
+            Status::IncorrectResponse(ref received_response) => {
+                let expected_response = format!("{:?}", self.response);
+
+                Err(
+                    ErrorKind::IncorrectResponse(
+                        received_response.clone(),
+                        expected_response,
+                    ).into(),
+                )
+            }
+        }
     }
 
     fn force_stop(&mut self) -> Result<(), Self::Error> {
@@ -64,19 +96,35 @@ where
             return Ok(());
         }
 
-        let request = format!("{:?}", self.request);
-        let response = format!("{:?}", self.response);
+        let expected_request = format!("{:?}", self.request);
+        let expected_response = format!("{:?}", self.response);
 
         match self.status {
+            Status::Verified => Ok(()),
             Status::WaitingForRequest => Err(
-                ErrorKind::RequestAndResponseWerentVerified(request, response)
-                    .into(),
+                ErrorKind::RequestAndResponseWerentVerified(
+                    expected_request,
+                    expected_response,
+                ).into(),
             ),
             Status::RequestVerified => Err(
-                ErrorKind::RequestVerifiedButNotResponse(request, response)
-                    .into(),
+                ErrorKind::RequestVerifiedButNotResponse(
+                    expected_request,
+                    expected_response,
+                ).into(),
             ),
-            Status::Verified => Ok(()),
+            Status::IncorrectRequest(ref received_request) => Err(
+                ErrorKind::IncorrectRequest(
+                    received_request.clone(),
+                    expected_request,
+                ).into(),
+            ),
+            Status::IncorrectResponse(ref received_response) => Err(
+                ErrorKind::IncorrectResponse(
+                    received_response.clone(),
+                    expected_response,
+                ).into(),
+            ),
         }
     }
 }

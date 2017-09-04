@@ -9,6 +9,18 @@ error_chain! {
             )
         }
 
+        IncorrectResponse(
+            received_response: String,
+            expected_response: String
+        ) {
+            description("received an incorrect response")
+            display(
+                "received response {} while expecting {}",
+                received_response,
+                expected_response,
+            )
+        }
+
         RequestWasntVerified(request: String) {
             description("an expected request was not verified")
             display("an expected request was not verified: {}", request)
