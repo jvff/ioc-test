@@ -1,3 +1,4 @@
+mod box_verifier_factory_wrapper;
 mod boxed_verifier;
 mod converted_error;
 mod errors;
@@ -12,6 +13,7 @@ mod verify_sequence;
 mod verify_sequence_pair;
 mod verify_two;
 
+pub use self::box_verifier_factory_wrapper::BoxVerifierFactoryWrapper;
 pub use self::boxed_verifier::BoxedVerifier;
 pub use self::converted_error::ConvertedError;
 pub use self::eventually_verify::EventuallyVerify;
