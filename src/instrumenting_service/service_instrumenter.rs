@@ -10,8 +10,11 @@ use super::verifiers::{Verifier, VerifierFactory};
 pub struct ServiceInstrumenter<T, V, E>
 where
     T: NewService,
-    V: Verifier<Request = T::Request, Response = T::Response>,
-    E: From<T::Error> + From<V::Error> + From<<T::Instance as Service>::Error>,
+    V: VerifierFactory,
+    V::Verifier: Verifier<Request = T::Request, Response = T::Response>,
+    E: From<T::Error>
+        + From<<V::Verifier as Verifier>::Error>
+        + From<<T::Instance as Service>::Error>,
 {
     factory: T,
     verifier: V,
@@ -21,8 +24,11 @@ where
 impl<T, V, E> ServiceInstrumenter<T, V, E>
 where
     T: NewService,
-    V: Verifier<Request = T::Request, Response = T::Response>,
-    E: From<T::Error> + From<V::Error> + From<<T::Instance as Service>::Error>,
+    V: VerifierFactory,
+    V::Verifier: Verifier<Request = T::Request, Response = T::Response>,
+    E: From<T::Error>
+        + From<<V::Verifier as Verifier>::Error>
+        + From<<T::Instance as Service>::Error>,
 {
     pub fn new(factory: T, verifier: V) -> Self {
         Self {
@@ -36,8 +42,11 @@ where
 impl<T, V, E> Deref for ServiceInstrumenter<T, V, E>
 where
     T: NewService,
-    V: Verifier<Request = T::Request, Response = T::Response>,
-    E: From<T::Error> + From<V::Error> + From<<T::Instance as Service>::Error>,
+    V: VerifierFactory,
+    V::Verifier: Verifier<Request = T::Request, Response = T::Response>,
+    E: From<T::Error>
+        + From<<V::Verifier as Verifier>::Error>
+        + From<<T::Instance as Service>::Error>,
 {
     type Target = T;
 
@@ -49,10 +58,9 @@ where
 impl<T, V, E> NewService for ServiceInstrumenter<T, V, E>
 where
     T: NewService,
-    V: Verifier<Request = T::Request, Response = T::Response> + VerifierFactory,
+    V: VerifierFactory,
     V::Verifier: Verifier<Request = T::Request, Response = T::Response>,
     E: From<T::Error>
-        + From<V::Error>
         + From<<V::Verifier as Verifier>::Error>
         + From<<T::Instance as Service>::Error>,
 {
