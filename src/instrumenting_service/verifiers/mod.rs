@@ -7,6 +7,7 @@ mod verifier_factory;
 mod verify_all;
 mod verify_request;
 mod verify_request_response;
+mod verify_sequence;
 mod verify_sequence_pair;
 mod verify_two;
 
@@ -19,5 +20,6 @@ pub use self::verifier_factory::VerifierFactory;
 pub use self::verify_all::VerifyAll;
 pub use self::verify_request::VerifyRequest;
 pub use self::verify_request_response::VerifyRequestResponse;
+pub use self::verify_sequence::VerifySequence;
 pub use self::verify_sequence_pair::VerifySequencePair;
 pub use self::verify_two::VerifyTwo;
