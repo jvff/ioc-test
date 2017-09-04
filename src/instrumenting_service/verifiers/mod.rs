@@ -1,6 +1,7 @@
 mod boxed_verifier;
 mod converted_error;
 mod errors;
+mod eventually_verify;
 mod verifier;
 mod verifier_factory;
 mod verify_all;
@@ -11,6 +12,7 @@ mod verify_two;
 
 pub use self::boxed_verifier::BoxedVerifier;
 pub use self::converted_error::ConvertedError;
+pub use self::eventually_verify::EventuallyVerify;
 pub use self::errors::{Error, ErrorKind, Result};
 pub use self::verifier::Verifier;
 pub use self::verifier_factory::VerifierFactory;
