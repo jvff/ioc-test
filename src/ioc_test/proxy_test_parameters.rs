@@ -12,7 +12,10 @@ use super::ioc_test_parameters::IocTestParameters;
 use super::super::{async_server, proxy_service};
 use super::super::instrumenting_service::{InstrumentingService,
                                           ServiceInstrumenter, WhenVerifier};
-use super::super::instrumenting_service::verifiers::{EventuallyVerify,
+use super::super::instrumenting_service::verifiers;
+use super::super::instrumenting_service::verifiers::{BoxedVerifier,
+                                                     BoxedVerifierFactory,
+                                                     EventuallyVerify,
                                                      VerifyAll};
 use super::super::proxy_service::{ProxyService, ProxyServiceFactory};
 
@@ -68,9 +71,7 @@ where
             SplitStream<<P as ClientProto<TcpStream>>::Transport>,
             SplitSink<<P as ClientProto<TcpStream>>::Transport>,
         >,
-        EventuallyVerify<
-            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
-        >,
+        BoxedVerifier<'static, Self::Request, Self::Response, verifiers::Error>,
         proxy_service::Error,
     >;
     type ServiceFactory = ServiceInstrumenter<
@@ -78,8 +79,11 @@ where
             SplitStream<<P as ClientProto<TcpStream>>::Transport>,
             SplitSink<<P as ClientProto<TcpStream>>::Transport>,
         >,
-        EventuallyVerify<
-            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        BoxedVerifierFactory<
+            'static,
+            Self::Request,
+            Self::Response,
+            verifiers::Error,
         >,
         proxy_service::Error,
     >;
@@ -91,13 +95,15 @@ where
     fn create_service_factory(
         &self,
         _expected_requests: HashMap<Self::Request, Self::Response>,
-        verifier: EventuallyVerify<
+        verifier_factory: EventuallyVerify<
             VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
         >,
     ) -> Self::ServiceFactory {
         let proxy_service_factory =
             ProxyServiceFactory::new(self.source.clone(), self.sink.clone());
+        let boxed_verifier_factory =
+            BoxedVerifierFactory::new(verifier_factory);
 
-        ServiceInstrumenter::new(proxy_service_factory, verifier)
+        ServiceInstrumenter::new(proxy_service_factory, boxed_verifier_factory)
     }
 }
