@@ -11,7 +11,8 @@ use super::ioc_test_parameters::IocTestParameters;
 use super::super::{async_server, mock_service};
 use super::super::instrumenting_service::{InstrumentingService,
                                           ServiceInstrumenter, WhenVerifier};
-use super::super::instrumenting_service::verifiers::VerifyAll;
+use super::super::instrumenting_service::verifiers::{EventuallyVerify,
+                                                     VerifyAll};
 use super::super::mock_service::{MockService, MockServiceFactory};
 
 #[derive(Clone)]
@@ -46,12 +47,12 @@ where
     type ServiceError = mock_service::Error;
     type Service = InstrumentingService<
         MockService<P::Request, P::Response>,
-        VerifyAll<WhenVerifier<P::Request, P::Response>>,
+        EventuallyVerify<VerifyAll<WhenVerifier<P::Request, P::Response>>>,
         mock_service::Error,
     >;
     type ServiceFactory = ServiceInstrumenter<
         MockServiceFactory<P::Request, P::Response>,
-        VerifyAll<WhenVerifier<P::Request, P::Response>>,
+        EventuallyVerify<VerifyAll<WhenVerifier<P::Request, P::Response>>>,
         mock_service::Error,
     >;
 
@@ -62,7 +63,9 @@ where
     fn create_service_factory(
         &self,
         expected_requests: HashMap<Self::Request, Self::Response>,
-        verifier: VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        verifier: EventuallyVerify<
+            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        >,
     ) -> Self::ServiceFactory {
         let mock_service_factory =
             MockServiceFactory::new(Arc::new(Mutex::new(expected_requests)));

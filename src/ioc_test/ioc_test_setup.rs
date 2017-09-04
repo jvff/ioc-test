@@ -10,7 +10,7 @@ use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_variable_action::IocTestVariableAction;
 use super::ioc_test_when_action::IocTestWhenAction;
 use super::super::instrumenting_service::{When, WhenVerifier};
-use super::super::instrumenting_service::verifiers::VerifyAll;
+use super::super::instrumenting_service::verifiers::{Verifier, VerifyAll};
 use super::super::ioc::{EpicsDataType, IocSpawn};
 use super::super::async_server::StartServer;
 use super::super::test::test::IntoTest;
@@ -120,7 +120,7 @@ where
 
         let service_factory = self.test_parameters.create_service_factory(
             self.request_map,
-            VerifyAll::new(self.verifiers),
+            VerifyAll::new(self.verifiers).eventually(),
         );
 
         let server = StartServer::new(

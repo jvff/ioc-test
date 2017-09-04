@@ -12,7 +12,8 @@ use super::ioc_test_parameters::IocTestParameters;
 use super::super::{async_server, proxy_service};
 use super::super::instrumenting_service::{InstrumentingService,
                                           ServiceInstrumenter, WhenVerifier};
-use super::super::instrumenting_service::verifiers::VerifyAll;
+use super::super::instrumenting_service::verifiers::{EventuallyVerify,
+                                                     VerifyAll};
 use super::super::proxy_service::{ProxyService, ProxyServiceFactory};
 
 #[derive(Clone)]
@@ -67,7 +68,9 @@ where
             SplitStream<<P as ClientProto<TcpStream>>::Transport>,
             SplitSink<<P as ClientProto<TcpStream>>::Transport>,
         >,
-        VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        EventuallyVerify<
+            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        >,
         proxy_service::Error,
     >;
     type ServiceFactory = ServiceInstrumenter<
@@ -75,7 +78,9 @@ where
             SplitStream<<P as ClientProto<TcpStream>>::Transport>,
             SplitSink<<P as ClientProto<TcpStream>>::Transport>,
         >,
-        VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        EventuallyVerify<
+            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        >,
         proxy_service::Error,
     >;
 
@@ -86,7 +91,9 @@ where
     fn create_service_factory(
         &self,
         _expected_requests: HashMap<Self::Request, Self::Response>,
-        verifier: VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        verifier: EventuallyVerify<
+            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        >,
     ) -> Self::ServiceFactory {
         let proxy_service_factory =
             ProxyServiceFactory::new(self.source.clone(), self.sink.clone());

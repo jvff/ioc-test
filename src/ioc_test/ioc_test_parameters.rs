@@ -11,7 +11,8 @@ use super::errors::Error;
 use super::super::async_server;
 use super::super::async_server::FiniteService;
 use super::super::instrumenting_service::WhenVerifier;
-use super::super::instrumenting_service::verifiers::VerifyAll;
+use super::super::instrumenting_service::verifiers::{EventuallyVerify,
+                                                     VerifyAll};
 
 pub trait IocTestParameters {
     type Request: Clone + Debug + Display + Eq + Hash + 'static;
@@ -40,6 +41,8 @@ pub trait IocTestParameters {
     fn create_service_factory(
         &self,
         expected_requests: HashMap<Self::Request, Self::Response>,
-        verifier: VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        verifier: EventuallyVerify<
+            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        >,
     ) -> Self::ServiceFactory;
 }
