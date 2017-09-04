@@ -2,11 +2,13 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
+use ordered_float::OrderedFloat;
+
 use super::errors::{Error, ErrorKind, Result};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum EpicsDataType {
-    DbrDouble(f64),
+    DbrDouble(OrderedFloat<f64>),
     DbrString(String),
 }
 
@@ -15,7 +17,9 @@ impl EpicsDataType {
     where
         S: AsRef<str>,
     {
-        Ok(EpicsDataType::DbrDouble(string.as_ref().parse()?))
+        Ok(EpicsDataType::DbrDouble(
+            string.as_ref().parse::<f64>()?.into(),
+        ))
     }
 
     pub fn dbr_string_from<S>(string: S) -> EpicsDataType
