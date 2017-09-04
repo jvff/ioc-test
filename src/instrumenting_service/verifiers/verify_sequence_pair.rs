@@ -2,7 +2,7 @@ use super::verifier::Verifier;
 use super::verifier_factory::VerifierFactory;
 
 #[derive(Clone)]
-pub struct VerifySequence<A, B>
+pub struct VerifySequencePair<A, B>
 where
     A: Verifier,
     B: Verifier<Request = A::Request, Response = A::Response, Error = A::Error>,
@@ -11,7 +11,7 @@ where
     second: B,
 }
 
-impl<A, B> VerifySequence<A, B>
+impl<A, B> VerifySequencePair<A, B>
 where
     A: Verifier,
     B: Verifier<Request = A::Request, Response = A::Response, Error = A::Error>,
@@ -21,7 +21,7 @@ where
     }
 }
 
-impl<A, B> Verifier for VerifySequence<A, B>
+impl<A, B> Verifier for VerifySequencePair<A, B>
 where
     A: Verifier,
     B: Verifier<Request = A::Request, Response = A::Response, Error = A::Error>,
@@ -58,7 +58,7 @@ where
     }
 }
 
-impl<A, B> VerifierFactory for VerifySequence<A, B>
+impl<A, B> VerifierFactory for VerifySequencePair<A, B>
 where
     A: Verifier + VerifierFactory,
     B: Verifier<Request = A::Request, Response = A::Response, Error = A::Error>
@@ -69,9 +69,9 @@ where
         Error = <A::Verifier as Verifier>::Error,
     >,
 {
-    type Verifier = VerifySequence<A::Verifier, B::Verifier>;
+    type Verifier = VerifySequencePair<A::Verifier, B::Verifier>;
 
     fn create(&self) -> Self::Verifier {
-        VerifySequence::new(self.first.create(), self.second.create())
+        VerifySequencePair::new(self.first.create(), self.second.create())
     }
 }
