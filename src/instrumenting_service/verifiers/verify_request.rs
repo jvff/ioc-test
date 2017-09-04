@@ -1,22 +1,29 @@
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
-use super::errors::{Error, ErrorKind};
+use super::errors::{Error, ErrorKind, Result};
 use super::verifier::Verifier;
 use super::verifier_factory::VerifierFactory;
 
 #[derive(Clone)]
 pub struct VerifyRequest<A, B> {
-    verified: bool,
     request: A,
+    status: Status,
     _response: PhantomData<B>,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum Status {
+    Active,
+    Verified,
+    IncorrectRequest(String),
 }
 
 impl<A, B> VerifyRequest<A, B> {
     pub fn new(request: A) -> Self {
         Self {
             request,
-            verified: false,
+            status: Status::Active,
             _response: PhantomData,
         }
     }
@@ -31,24 +38,54 @@ where
     type Error = Error;
 
     fn request(&mut self, request: &Self::Request) {
-        if !self.verified {
-            self.verified = self.request == *request;
+        if self.status == Status::Active {
+            if self.request == *request {
+                self.status = Status::Verified;
+            } else {
+                let received_request = format!("{:?}", *request);
+
+                self.status = Status::IncorrectRequest(received_request);
+            }
         }
     }
 
     fn response(&mut self, _response: &Self::Response) {}
 
-    fn has_finished(&self) -> Result<bool, Self::Error> {
-        Ok(self.verified)
+    fn has_finished(&self) -> Result<bool> {
+        match self.status {
+            Status::Active => Ok(false),
+            Status::Verified => Ok(true),
+            Status::IncorrectRequest(ref received_request) => {
+                let expected_request = format!("{:?}", self.request);
+
+                Err(
+                    ErrorKind::IncorrectRequest(
+                        received_request.clone(),
+                        expected_request,
+                    ).into(),
+                )
+            }
+        }
     }
 
-    fn force_stop(&mut self) -> Result<(), Self::Error> {
-        if self.verified {
-            Ok(())
-        } else {
-            let request = format!("{:?}", self.request);
+    fn force_stop(&mut self) -> Result<()> {
+        match self.status {
+            Status::Verified => Ok(()),
+            Status::Active => {
+                let request = format!("{:?}", self.request);
 
-            Err(ErrorKind::RequestWasntVerified(request).into())
+                Err(ErrorKind::RequestWasntVerified(request).into())
+            }
+            Status::IncorrectRequest(ref received_request) => {
+                let expected_request = format!("{:?}", self.request);
+
+                Err(
+                    ErrorKind::IncorrectRequest(
+                        received_request.clone(),
+                        expected_request,
+                    ).into(),
+                )
+            }
         }
     }
 }
