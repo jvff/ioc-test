@@ -1,5 +1,7 @@
 use super::boxed_verifier::BoxedVerifier;
 use super::converted_error::ConvertedError;
+use super::eventually_verify::EventuallyVerify;
+use super::verifier_factory::VerifierFactory;
 
 pub trait Verifier {
     type Request;
@@ -26,5 +28,12 @@ pub trait Verifier {
         Self: Sized,
     {
         ConvertedError::new(self)
+    }
+
+    fn eventually(self) -> EventuallyVerify<Self>
+    where
+        Self: Sized + VerifierFactory,
+    {
+        EventuallyVerify::new(self)
     }
 }
