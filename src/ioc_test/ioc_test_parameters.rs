@@ -10,9 +10,8 @@ use tokio_service::NewService;
 use super::errors::Error;
 use super::super::async_server;
 use super::super::async_server::FiniteService;
-use super::super::instrumenting_service::WhenVerifier;
-use super::super::instrumenting_service::verifiers::{EventuallyVerify,
-                                                     VerifyAll};
+use super::super::instrumenting_service::verifiers;
+use super::super::instrumenting_service::verifiers::BoxedVerifierFactory;
 
 pub trait IocTestParameters {
     type Request: Clone + Debug + Display + Eq + Hash + 'static;
@@ -41,8 +40,11 @@ pub trait IocTestParameters {
     fn create_service_factory(
         &self,
         expected_requests: HashMap<Self::Request, Self::Response>,
-        verifier: EventuallyVerify<
-            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        verifier_factory: BoxedVerifierFactory<
+            'static,
+            Self::Request,
+            Self::Response,
+            verifiers::Error,
         >,
     ) -> Self::ServiceFactory;
 }

@@ -10,12 +10,10 @@ use super::errors::Error;
 use super::ioc_test_parameters::IocTestParameters;
 use super::super::{async_server, mock_service};
 use super::super::instrumenting_service::{InstrumentingService,
-                                          ServiceInstrumenter, WhenVerifier};
+                                          ServiceInstrumenter};
 use super::super::instrumenting_service::verifiers;
 use super::super::instrumenting_service::verifiers::{BoxedVerifier,
-                                                     BoxedVerifierFactory,
-                                                     EventuallyVerify,
-                                                     VerifyAll};
+                                                     BoxedVerifierFactory};
 use super::super::mock_service::{MockService, MockServiceFactory};
 
 #[derive(Clone)]
@@ -71,15 +69,16 @@ where
     fn create_service_factory(
         &self,
         expected_requests: HashMap<Self::Request, Self::Response>,
-        verifier_factory: EventuallyVerify<
-            VerifyAll<WhenVerifier<Self::Request, Self::Response>>,
+        verifier_factory: BoxedVerifierFactory<
+            'static,
+            Self::Request,
+            Self::Response,
+            verifiers::Error,
         >,
     ) -> Self::ServiceFactory {
         let mock_service_factory =
             MockServiceFactory::new(Arc::new(Mutex::new(expected_requests)));
-        let boxed_verifier_factory =
-            BoxedVerifierFactory::new(verifier_factory);
 
-        ServiceInstrumenter::new(mock_service_factory, boxed_verifier_factory)
+        ServiceInstrumenter::new(mock_service_factory, verifier_factory)
     }
 }
