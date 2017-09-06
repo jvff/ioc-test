@@ -8,14 +8,7 @@ pub enum IocTestVariableAction {
 
 impl IocTestVariableAction {
     pub fn ioc_shell_command(&self) -> IocShellCommand {
-        match *self {
-            IocTestVariableAction::Set(ref name, ref value) => {
-                IocShellCommand::DbPutField(name.clone(), value.to_string())
-            }
-            IocTestVariableAction::Check(ref name, _) => {
-                IocShellCommand::DbGetField(name.clone())
-            }
-        }
+        self.clone().into()
     }
 
     pub fn expected_output(&self) -> String {
@@ -31,6 +24,19 @@ impl IocTestVariableAction {
         match *self {
             IocTestVariableAction::Set(_, ref value) => value.clone(),
             IocTestVariableAction::Check(_, ref value) => value.clone(),
+        }
+    }
+}
+
+impl Into<IocShellCommand> for IocTestVariableAction {
+    fn into(self) -> IocShellCommand {
+        match self {
+            IocTestVariableAction::Set(name, value) => {
+                IocShellCommand::DbPutField(name, value.to_string())
+            }
+            IocTestVariableAction::Check(name, _) => {
+                IocShellCommand::DbGetField(name)
+            }
         }
     }
 }
