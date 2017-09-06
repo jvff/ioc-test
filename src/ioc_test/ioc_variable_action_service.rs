@@ -7,25 +7,22 @@ use super::ioc_test_variable_action::IocTestVariableAction;
 
 pub struct IocVariableActionService<I, S>
 where
-    I: Iterator<Item = IocTestVariableAction>,
+    I: IntoIterator<Item = IocTestVariableAction>,
     S: FiniteService,
     IocTestVariableAction: Into<S::Request>,
 {
-    variable_actions: I,
+    variable_actions: I::IntoIter,
     ioc_variable_service: S,
     active_request: Option<S::Future>,
 }
 
 impl<I, S> IocVariableActionService<I, S>
 where
-    I: Iterator<Item = IocTestVariableAction>,
+    I: IntoIterator<Item = IocTestVariableAction>,
     S: FiniteService,
     IocTestVariableAction: Into<S::Request>,
 {
-    pub fn new<T>(variable_actions: T, ioc_variable_service: S) -> Self
-    where
-        T: IntoIterator<IntoIter = I, Item = IocTestVariableAction>,
-    {
+    pub fn new(variable_actions: I, ioc_variable_service: S) -> Self {
         Self {
             ioc_variable_service,
             variable_actions: variable_actions.into_iter(),
@@ -53,7 +50,7 @@ where
 
 impl<I, S> Future for IocVariableActionService<I, S>
 where
-    I: Iterator<Item = IocTestVariableAction>,
+    I: IntoIterator<Item = IocTestVariableAction>,
     S: FiniteService,
     IocTestVariableAction: Into<S::Request>,
 {
