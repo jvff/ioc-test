@@ -1,14 +1,14 @@
 use std::iter::{IntoIterator, Iterator};
 
 use futures::{Async, Future, Poll};
-use tokio_service::Service;
 
+use super::super::async_server::FiniteService;
 use super::ioc_test_variable_action::IocTestVariableAction;
 
 pub struct IocVariableActionService<I, S>
 where
     I: Iterator<Item = IocTestVariableAction>,
-    S: Service,
+    S: FiniteService,
     IocTestVariableAction: Into<S::Request>,
 {
     variable_actions: I,
@@ -19,7 +19,7 @@ where
 impl<I, S> IocVariableActionService<I, S>
 where
     I: Iterator<Item = IocTestVariableAction>,
-    S: Service,
+    S: FiniteService,
     IocTestVariableAction: Into<S::Request>,
 {
     pub fn new<T>(variable_actions: T, ioc_variable_service: S) -> Self
@@ -54,7 +54,7 @@ where
 impl<I, S> Future for IocVariableActionService<I, S>
 where
     I: Iterator<Item = IocTestVariableAction>,
-    S: Service,
+    S: FiniteService,
     IocTestVariableAction: Into<S::Request>,
 {
     type Item = ();
@@ -70,6 +70,8 @@ where
 
             self.send_next_request();
         }
+
+        self.ioc_variable_service.force_stop()?;
 
         Ok(Async::Ready(()))
     }
