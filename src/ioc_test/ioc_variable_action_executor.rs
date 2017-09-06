@@ -5,7 +5,7 @@ use futures::{Async, Future, Poll};
 use super::super::async_server::FiniteService;
 use super::ioc_test_variable_action::IocTestVariableAction;
 
-pub struct IocVariableActionService<I, S>
+pub struct IocVariableActionExecutor<I, S>
 where
     I: IntoIterator<Item = IocTestVariableAction>,
     S: FiniteService,
@@ -16,7 +16,7 @@ where
     active_request: Option<S::Future>,
 }
 
-impl<I, S> IocVariableActionService<I, S>
+impl<I, S> IocVariableActionExecutor<I, S>
 where
     I: IntoIterator<Item = IocTestVariableAction>,
     S: FiniteService,
@@ -52,7 +52,7 @@ where
     }
 }
 
-impl<I, S> Future for IocVariableActionService<I, S>
+impl<I, S> Future for IocVariableActionExecutor<I, S>
 where
     I: IntoIterator<Item = IocTestVariableAction>,
     S: FiniteService,

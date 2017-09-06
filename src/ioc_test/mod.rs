@@ -13,7 +13,7 @@ mod ioc_test_start;
 mod ioc_test_start_ioc;
 mod ioc_test_variable_action;
 mod ioc_test_when_action;
-mod ioc_variable_action_service;
+mod ioc_variable_action_executor;
 mod mock_test_parameters;
 mod proxy_test_parameters;
 
