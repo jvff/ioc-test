@@ -1,20 +1,16 @@
 use std::time::Duration;
 
-use futures::future;
 use futures::{Async, Future, Poll};
-use futures::future::JoinAll;
-use tokio_service::Service;
 
 use super::errors::{Error, Result};
 use super::ioc_shell_variable_verifier::IocShellVariableVerifier;
 use super::ioc_test_parameters::IocTestParameters;
 use super::ioc_test_variable_action::IocTestVariableAction;
+use super::ioc_variable_action_executor::IocVariableActionExecutor;
 use super::super::async_server;
-use super::super::async_server::{AsyncServer, FiniteService};
-use super::super::ioc::{IocInstance, IocShellCommandVariableResult,
-                        IocShellVariableService};
-use super::super::instrumenting_service::{InstrumentedResponse,
-                                          InstrumentingService};
+use super::super::async_server::AsyncServer;
+use super::super::ioc::{IocInstance, IocShellVariableService};
+use super::super::instrumenting_service::InstrumentingService;
 
 pub struct IocTestExecution<P>
 where
@@ -23,21 +19,13 @@ where
 {
     server: Option<AsyncServer<P::Protocol, P::ServiceFactory>>,
     ioc: Option<IocInstance>,
-    service: Option<
-        InstrumentingService<
-            IocShellVariableService,
-            IocShellVariableVerifier,
-            Error,
-        >,
-    >,
-    commands: Option<
-        JoinAll<
-            Vec<
-                InstrumentedResponse<
-                    IocShellCommandVariableResult,
-                    IocShellVariableVerifier,
-                    Error,
-                >,
+    variable_action_executor: Option<
+        IocVariableActionExecutor<
+            Vec<IocTestVariableAction>,
+            InstrumentingService<
+                IocShellVariableService,
+                IocShellVariableVerifier,
+                Error,
             >,
         >,
     >,
@@ -57,19 +45,13 @@ where
         let ioc_service = IocShellVariableService::from(ioc.shell()?);
         let service = InstrumentingService::new(ioc_service, verifier);
 
-        let command_futures = variable_actions
-            .iter()
-            .map(|variable_action| {
-                service.call(variable_action.ioc_shell_command())
-            })
-            .collect();
-        let commands = future::join_all(command_futures);
+        let variable_action_executor =
+            IocVariableActionExecutor::new(variable_actions, service);
 
         Ok(Self {
             ioc: Some(ioc),
             server: Some(server),
-            service: Some(service),
-            commands: Some(commands),
+            variable_action_executor: Some(variable_action_executor),
             error: None,
         })
     }
@@ -98,32 +80,8 @@ where
         self
     }
 
-    fn poll_ioc_commands(&mut self) -> &mut Self {
-        let mut command_error_slot = None;
-
-        Self::poll_slot(&mut self.commands, &mut command_error_slot);
-
-        if let Some(error) = command_error_slot {
-            self.poll_ioc();
-
-            if self.ioc.is_some() && self.error.is_none() {
-                self.error = Some(error);
-            }
-        }
-
-        self
-    }
-
-    fn poll_ioc_service(&mut self) -> &mut Self {
-        if self.error.is_none() {
-            if let Some(ioc_service) = self.service.take() {
-                match ioc_service.has_finished() {
-                    Ok(true) => {}
-                    Ok(false) => self.service = Some(ioc_service),
-                    Err(error) => self.error = Some(error),
-                }
-            }
-        }
+    fn poll_variable_action_executor(&mut self) -> &mut Self {
+        Self::poll_slot(&mut self.variable_action_executor, &mut self.error);
 
         self
     }
@@ -149,14 +107,14 @@ where
 
     fn clean_poll_status(&mut self) {
         if self.ioc.is_none() {
-            self.stop_service();
+            self.stop_variable_action_executor();
             self.stop_server();
         } else if self.server.is_none() {
             self.stop_ioc();
             self.poll_ioc();
 
             if self.ioc.is_none() {
-                self.stop_service();
+                self.stop_variable_action_executor();
             }
         }
     }
@@ -180,10 +138,10 @@ where
         }
     }
 
-    fn stop_service(&mut self) {
+    fn stop_variable_action_executor(&mut self) {
         if self.error.is_none() {
-            if let Some(ref mut service) = self.service {
-                match service.force_stop() {
+            if let Some(ref mut executor) = self.variable_action_executor {
+                match executor.force_stop() {
                     Ok(_) => {}
                     Err(error) => self.error = Some(error),
                 }
@@ -201,8 +159,7 @@ where
 
     fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
         self.poll_server()
-            .poll_ioc_commands()
-            .poll_ioc_service()
+            .poll_variable_action_executor()
             .poll_ioc()
             .get_poll_result()
     }
