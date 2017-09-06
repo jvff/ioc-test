@@ -30,6 +30,10 @@ where
         }
     }
 
+    pub fn force_stop(&mut self) -> Result<(), S::Error> {
+        self.ioc_variable_service.force_stop()
+    }
+
     fn send_next_request(&mut self) {
         if let Some(variable_action) = self.variable_actions.next() {
             let request = variable_action.into();
@@ -68,7 +72,7 @@ where
             self.send_next_request();
         }
 
-        self.ioc_variable_service.force_stop()?;
+        self.force_stop()?;
 
         Ok(Async::Ready(()))
     }
