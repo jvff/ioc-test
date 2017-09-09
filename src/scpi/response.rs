@@ -39,10 +39,10 @@ impl FromStr for ScpiResponse {
     fn from_str(string: &str) -> Result<Self> {
         if string.len() == 0 {
             Ok(ScpiResponse::Empty)
-        } else if let Ok(double) = string.parse::<f64>() {
-            Ok(ScpiResponse::Double(double.into()))
         } else if let Ok(integer) = string.parse() {
             Ok(ScpiResponse::Integer(integer))
+        } else if let Ok(double) = string.parse::<f64>() {
+            Ok(ScpiResponse::Double(double.into()))
         } else {
             Ok(ScpiResponse::Utf8String(String::from(string)))
         }
