@@ -38,13 +38,37 @@ impl FromStr for ScpiResponse {
 
     fn from_str(string: &str) -> Result<Self> {
         if string.len() == 0 {
-            Ok(ScpiResponse::Empty)
-        } else if let Ok(integer) = string.parse() {
-            Ok(ScpiResponse::Integer(integer))
+            Ok(().into())
+        } else if let Ok(integer) = string.parse::<isize>() {
+            Ok(integer.into())
         } else if let Ok(double) = string.parse::<f64>() {
-            Ok(ScpiResponse::Double(double.into()))
+            Ok(double.into())
         } else {
-            Ok(ScpiResponse::Utf8String(String::from(string)))
+            Ok(string.into())
         }
+    }
+}
+
+impl From<()> for ScpiResponse {
+    fn from(_nothing: ()) -> ScpiResponse {
+        ScpiResponse::Empty
+    }
+}
+
+impl From<isize> for ScpiResponse {
+    fn from(value: isize) -> ScpiResponse {
+        ScpiResponse::Integer(value)
+    }
+}
+
+impl From<f64> for ScpiResponse {
+    fn from(value: f64) -> ScpiResponse {
+        ScpiResponse::Double(value.into())
+    }
+}
+
+impl<'a> From<&'a str> for ScpiResponse {
+    fn from(string: &str) -> ScpiResponse {
+        ScpiResponse::Utf8String(string.to_string())
     }
 }
