@@ -1,5 +1,9 @@
+use std::str::FromStr;
+
 use bytes::BytesMut;
 use ordered_float::OrderedFloat;
+
+use super::errors::{Error, Result};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ScpiResponse {
@@ -10,18 +14,6 @@ pub enum ScpiResponse {
 }
 
 impl ScpiResponse {
-    pub fn from(string: &str) -> Self {
-        if string.len() == 0 {
-            ScpiResponse::Empty
-        } else if let Ok(double) = string.parse::<f64>() {
-            ScpiResponse::Double(double.into())
-        } else if let Ok(integer) = string.parse() {
-            ScpiResponse::Integer(integer)
-        } else {
-            ScpiResponse::Utf8String(String::from(string))
-        }
-    }
-
     pub fn encode(&self, buffer: &mut BytesMut) {
         match *self {
             ScpiResponse::Empty => {}
@@ -37,6 +29,22 @@ impl ScpiResponse {
                 buffer.extend(string.as_bytes());
                 buffer.extend("\n".as_bytes())
             }
+        }
+    }
+}
+
+impl FromStr for ScpiResponse {
+    type Err = Error;
+
+    fn from_str(string: &str) -> Result<Self> {
+        if string.len() == 0 {
+            Ok(ScpiResponse::Empty)
+        } else if let Ok(double) = string.parse::<f64>() {
+            Ok(ScpiResponse::Double(double.into()))
+        } else if let Ok(integer) = string.parse() {
+            Ok(ScpiResponse::Integer(integer))
+        } else {
+            Ok(ScpiResponse::Utf8String(String::from(string)))
         }
     }
 }
