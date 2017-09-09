@@ -40,6 +40,8 @@ where
             let active_request = self.ioc_variable_service.call(request);
 
             self.active_request = Some(active_request);
+        } else {
+            self.active_request = None;
         }
     }
 
