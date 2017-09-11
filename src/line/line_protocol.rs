@@ -6,6 +6,7 @@ use tokio_proto::pipeline::ServerProto;
 
 use super::line_codec::LineCodec;
 
+#[derive(Clone, Copy, Debug)]
 pub struct LineProtocol {
     separator: u8,
 }
