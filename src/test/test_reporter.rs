@@ -87,6 +87,15 @@ where
             );
         }
 
+        if self.failed_tests == 0 && self.successful_tests == 0 {
+            println!(
+                "{bold}{yellow}No tests executed{reset}",
+                bold = Bold,
+                yellow = Fg(Yellow),
+                reset = Reset,
+            );
+        }
+
         Ok(Async::Ready(()))
     }
 }
