@@ -52,10 +52,12 @@ where
         if self.status.is_running() {
             let new_request = self.connection.poll();
 
-            if let Ok(Async::Ready(Some(request))) = new_request {
-                self.live_requests.push(self.service.call(request));
-            } else {
-                self.status.update(new_request);
+            match new_request {
+                Ok(Async::Ready(Some(request))) => {
+                    self.live_requests.push(self.service.call(request))
+                }
+                Ok(Async::Ready(None)) => self.status.update(Status::Finished),
+                new_request => self.status.update(new_request),
             }
         }
 
